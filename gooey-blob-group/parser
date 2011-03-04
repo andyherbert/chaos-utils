@@ -34,21 +34,11 @@ def rip_email(filename)
   return headers, body.join("\n")
 end
 
-docs = Array.new
-
 Dir.glob('rip_site_out/message_*').each do |filename|
   filename.scan(/^rip_site_out\/message_(\d+)\.html$/) do |num|
     output = "parser_out/message_#{"%04d" % num}.json"
     puts "Parsing message #{filename}, creating #{output}"
     raw = Hpricot(File.open(filename).read).search('td.source').text.split(/\n/)
-    File.open(output, 'w') do |file|
-      file.puts JSON.pretty_generate(rip_email(filename))
-    end
+    File.open(output, 'w') { |file| file.puts(JSON.pretty_generate(rip_email(filename))) }
   end
 end
-# (1..1471).each do |num|
-#   puts num
-# end
-
-
-# puts JSON.pretty_generate(docs)
