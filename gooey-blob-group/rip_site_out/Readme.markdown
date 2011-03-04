@@ -1,1 +1,0 @@
-Placeholder for rip_site script output
