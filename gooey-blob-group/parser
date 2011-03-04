@@ -1,0 +1,54 @@
+require 'rubygems'
+require 'hpricot'
+require 'json'
+
+def rip_email(filename)
+  raw = Hpricot(File.open(filename).read).search('td.source').text.split(/\n/)
+  unless raw.length == 0
+    headers, body = Hash.new, Array.new
+    while raw.last.strip.empty?
+      raw.pop
+    end
+    while raw.first.strip.empty?
+      raw.slice!(0)
+    end
+    header = true
+    raw.each do |line|
+      if header
+        if line.empty?
+          header = false
+        else
+          line.scan(/^(\S+)\s*:\s*(.*)$/) do |field, value|
+            if headers.has_key?(field.downcase)
+              headers[field.downcase] += "\n" + value
+            else
+              headers[field.downcase] = value
+            end
+          end
+        end
+      else
+        body << line
+      end
+    end
+  end
+  return headers, body.join("\n")
+end
+
+docs = Array.new
+
+Dir.glob('rip_site_out/message_*').each do |filename|
+  filename.scan(/^rip_site_out\/message_(\d+)\.html$/) do |num|
+    output = "parser_out/message_#{"%04d" % num}.json"
+    puts "Parsing message #{filename}, creating #{output}"
+    raw = Hpricot(File.open(filename).read).search('td.source').text.split(/\n/)
+    File.open(output, 'w') do |file|
+      file.puts JSON.pretty_generate(rip_email(filename))
+    end
+  end
+end
+# (1..1471).each do |num|
+#   puts num
+# end
+
+
+# puts JSON.pretty_generate(docs)
