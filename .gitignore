@@ -1,2 +1,4 @@
 .DS_Store
 gooey-blob-group/rip_site_out/message_*
+gooey-blob-group/parser_out/message_*
+gooey-blob-group/unifier_out/gooey-blob.html
