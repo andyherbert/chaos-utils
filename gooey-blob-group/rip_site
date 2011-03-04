@@ -1,0 +1,19 @@
+#!/usr/bin/osascript
+
+-- Usage: rip_site <latest message number>
+-- Each page will be loaded every 10 seconds and saved in rip_site_out/
+
+on run argv
+  repeat with message_number from 1 to (item 1 of argv)
+    tell application "Safari"
+      open location "http://games.groups.yahoo.com/group/gooeyblob/message/" & message_number & "?source=1&var=1&l=1"
+      delay 10
+      set page_source to source of front document as string
+      set path_name to (POSIX path of (path to me)) & "_out/message_" & message_number & ".html"
+      set new_file to open for access path_name with write permission
+      write page_source to new_file
+      close access new_file
+      close front document
+    end tell
+  end repeat
+end run
