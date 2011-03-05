@@ -27,6 +27,15 @@ body {
   text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 0px;
 }
 
+.message .header .subject a {
+  color: darkblue;
+  text-decoration: none;
+}
+
+.message .header .subject a:hover {
+  text-decoration: underline;
+}
+
 .message .header .date {
   font-size: 10px;
   opacity: 0.3;
