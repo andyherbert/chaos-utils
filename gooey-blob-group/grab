@@ -3,6 +3,7 @@
 require 'rubygems'
 require 'hpricot'
 require 'cgi'
+require 'json'
 
 def grab_page(num)
   `osascript -e '
@@ -17,7 +18,7 @@ def grab_page(num)
   end run'`
 end
 
-def rip_email(raw)
+def rip_email(raw, msg_id)
   raw = Hpricot(raw).search('td.source').text.split(/\n/)
   unless raw.length == 0
     headers, body = Hash.new, Array.new
@@ -31,6 +32,7 @@ def rip_email(raw)
     raw.each do |line|
       if header
         if line.empty?
+          headers['gooey-blob-id'] = msg_id
           header = false
         else
           line.scan(/^(\S+)\s*:\s*(.*)$/) do |field, value|
@@ -50,6 +52,7 @@ def rip_email(raw)
 end
 
 if ARGV[0]
+  messages = Array.new
   File.open('output/gooey-blob.html', 'w') do |file|
     file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<link rel='stylesheet' href='gooey-blob.css' type='text/css' media='screen'>\n<title>Gooey Blob Group</title>\n</head>\n<body>"
     (1..(ARGV[0].to_i)).each do |num|
@@ -57,9 +60,10 @@ if ARGV[0]
       raw = grab_page(num)
       puts "done."
       print "Parsing page #{num}... "
-      message = rip_email(raw)
+      message = rip_email(raw, num)
       puts "done."
       if message
+        messages << message
         print "Adding to unified page... "
         file.puts "<div class='message'>"
         file.puts "<div class='header'>"
@@ -82,4 +86,8 @@ if ARGV[0]
   end
 else
   puts "Usage: #{$0} [last message number on gooeyblob group]"
+end
+
+File.open('output/messages.json', 'w') do |file|
+  file.puts JSON.pretty_generate(messages)
 end
