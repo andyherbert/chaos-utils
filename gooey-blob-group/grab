@@ -53,6 +53,7 @@ end
 
 if ARGV[0]
   messages = Array.new
+  puts "Opening output/gooey-blob.html for writing... "
   File.open('output/gooey-blob.html', 'w') do |file|
     file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<link rel='stylesheet' href='gooey-blob.css' type='text/css' media='screen'>\n<title>Gooey Blob Group</title>\n</head>\n<body>"
     (1..(ARGV[0].to_i)).each do |num|
@@ -64,7 +65,7 @@ if ARGV[0]
       puts "done."
       if message
         messages << message
-        print "Adding to unified page... "
+        print "Adding to output/gooey-blob.html... "
         file.puts "<div class='message'>"
         file.puts "<div class='header'>"
         file.puts "<span class='subject'><a href='http://games.groups.yahoo.com/group/gooeyblob/message/#{num}'>#{CGI.escapeHTML(message[0]['subject'])}</a></span>" if message[0]['subject']
@@ -84,10 +85,12 @@ if ARGV[0]
     end
     file.puts "</body>\n</html>"
   end
+  puts "Finished writing to output/gooey-blob.html"
+  print "Attempting to save all messages to output/messages.json... "
+  File.open('output/messages.json', 'w') do |file|
+    file.puts JSON.pretty_generate(messages)
+  end
+  puts "Done."
 else
   puts "Usage: #{$0} [last message number on gooeyblob group]"
-end
-
-File.open('output/messages.json', 'w') do |file|
-  file.puts JSON.pretty_generate(messages)
 end
