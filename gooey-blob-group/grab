@@ -6,7 +6,7 @@ require 'cgi'
 
 def grab_page(num)
   `osascript -e '
-  on run argv
+  on run
     tell application "Safari"
       open location "http://games.groups.yahoo.com/group/gooeyblob/message/#{1}?source=1&var=1&l=1"
       delay 10
@@ -49,7 +49,7 @@ def rip_email(raw)
   return body ? [headers, body.join("\n")] : nil
 end
 
-File.open('unifier_out/gooey-blob.html', 'w') do |file|
+File.open('output/gooey-blob.html', 'w') do |file|
   file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<link rel='stylesheet' href='gooey-blob.css' type='text/css' media='screen'>\n<title>Gooey Blob Group</title>\n</head>\n<body>"
   (1..(ARGV[0].to_i)).each do |num|
     print "Grabbing page #{num} from Safari... "
@@ -79,32 +79,3 @@ File.open('unifier_out/gooey-blob.html', 'w') do |file|
   end
   file.puts "</body>\n</html>"
 end
- # messages = Array.new
-# 
-# Dir.glob('rip_site_out/message_*').each do |filename|
-#   filename.scan(/^rip_site_out\/message_(\d+)\.html$/) do |num|
-#     puts "Parsing message #{filename}"
-    # messages[num.join.to_i] = rip_email(filename)
-#   end
-# end
-# 
-# File.open('unifier_out/gooey-blob.html', 'w') do |file|
-#   file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<link rel='stylesheet' href='gooey-blob.css' type='text/css' media='screen'>\n<title>Gooey Blob Group</title>\n</head>\n<body>"
-#   messages.each do |message|
-#     if message
-      # file.puts "<div class='message'>"
-      # file.puts "<div class='header'>"
-      # file.puts "<span class='subject'>#{CGI.escapeHTML(message[0]['subject'])}</span>" if message[0]['subject']
-      # file.puts "<span class='date'>#{CGI.escapeHTML(message[0]['date'])}</span>"if message[0]['date']
-      # file.puts "<div class='from'>#{CGI.escapeHTML(message[0]['from'])}</div>" if message[0]['from']
-      # file.puts "</div>"
-      # file.puts "<div class='message-body'>"
-      # file.puts "<pre>"
-      # file.puts CGI.escapeHTML(message[1])
-      # file.puts "</pre>"
-      # file.puts "</div>"
-      # file.puts "</div>"
-#     end
-#   end
-#   file.puts "</body>\n</html>"
-# end
