@@ -5,17 +5,23 @@ require 'hpricot'
 require 'cgi'
 require 'json'
 
-def grab_page(num)
+$yahoo_group = 'gooeyblob'
+
+def get_page(location)
   `osascript -e '
   on run
     tell application "Safari"
-      open location "http://games.groups.yahoo.com/group/gooeyblob/message/#{num}?source=1&var=1&l=1"
+      open location "#{location}"
       delay 10
       set page_source to source of front document as string
       close front document
     end tell
     return page_source
   end run'`
+end
+
+def get_message(num)
+  get_page("http://games.groups.yahoo.com/group/#{$yahoo_group}/message/#{num}?source=1&var=1&l=1")
 end
 
 def rip_email(raw, msg_id)
@@ -32,7 +38,7 @@ def rip_email(raw, msg_id)
     raw.each do |line|
       if header
         if line.empty?
-          headers['gooey-blob-id'] = msg_id
+          headers["#{$yahoo_group}-id"] = msg_id
           header = false
         else
           line.scan(/^(\S+)\s*:\s*(.*)$/) do |field, value|
@@ -51,46 +57,83 @@ def rip_email(raw, msg_id)
   return body ? [headers, body.join("\n")] : nil
 end
 
+def open_output
+  puts "Opening #{$yahoo_group}.html for writing... "
+  File.open("#{$yahoo_group}.html", 'w') do |file|
+    file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<title>#{$yahoo_group} Yahoo Group</title>"
+    file.puts "<style>body {background-color: #eaeaea;margin: 0;}.message {font-family: 'Lucidia Grande', 'Verdana', sans-serif;margin: 30px auto;background-color: white;width: 640px;border-bottom-left-radius: 6px;border-bottom-right-radius: 6px;padding-bottom: 2px;border: 1px solid rgba(0, 0, 0, 0.4);-webkit-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.15);-moz-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.15);-o-box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.15);box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.15);}.message .header {background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #f4f4f4));background: -moz-linear-gradient(top, #ffffff 0%, #f4f4f4 100%);padding: 4px 8px;font-size: 13px;line-height: 13px;border-bottom: 1px solid rgba(0, 0, 0, 0.2);text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 0px;}.message .header .subject a {color: darkblue;text-decoration: none;}.message .header .subject a:hover {text-decoration: underline;}.message .header .date {font-size: 10px;opacity: 0.3;}.message-body pre {font-family: 'Lucidia Grande', 'Verdana', sans-serif;font-size: 12px;margin: 4px 8px;white-space: pre-wrap;word-wrap: break-word;}</style>"
+    file.puts "</head>\n<body>"
+    yield file
+    file.puts "</body>\n</html>"
+  end
+  puts "Finished writing to #{$yahoo_group}.html"
+end
+
+def write_message(file, message)
+  print "Adding message #{message[0]["#{$yahoo_group}-id"]} to #{$yahoo_group}.html... "
+  file.puts "<div class='message'>"
+  file.puts "<div class='header'>"
+  file.puts "<span class='subject'><a href='http://games.groups.yahoo.com/group/#{$yahoo_group}/message/#{message[0]["#{$yahoo_group}-id"]}'>#{CGI.escapeHTML(message[0]['subject'] ? message[0]['subject'] : "(No Subject)")}</a></span>"
+  file.puts "<span class='date'>#{CGI.escapeHTML(message[0]['date'])}</span>" if message[0]['date']
+  file.puts "<div class='from'>#{CGI.escapeHTML(message[0]['from'])}</div>" if message[0]['from']
+  file.puts "</div>"
+  file.puts "<div class='message-body'>\n<pre>\n#{CGI.escapeHTML(message[1])}\n</pre>\n</div>"
+  file.puts "</div>"
+  puts "done."
+end
+
+def max_pages(max_value = 0)
+  print "Determining how many messages are available... "
+  Hpricot(get_page("http://games.groups.yahoo.com/group/#{$yahoo_group}")).search('a') do |link|
+    if link['href']
+      link['href'].scan(/\/message\/(\d+)$/) do |msg_num|
+        msg_num = msg_num.join.to_i
+        max_value = [msg_num, max_value].max 
+      end
+    end
+  end
+  puts "done."
+  max_value
+end
+
 if ARGV[0]
+  case ARGV[0]
+  when /--rehash/i
+    messages = JSON.parse(File.open("#{$yahoo_group}.json", 'r').read).each
+    open_output do |file|
+      messages.each do |message|
+        write_message(file, message)
+      end
+    end
+  when /--help/
+    puts "Usage grab [--rehash]"
+    puts "Rehash reloads all the messages from stored json, and generates a new html file"
+  else
+    puts "Unknown parameter: #{ARGV[0]}"
+    exit 1
+  end
+else
+  max = max_pages
   messages = Array.new
-  puts "Opening output/gooey-blob.html for writing... "
-  File.open('output/gooey-blob.html', 'w') do |file|
-    file.puts "<!DOCTYPE html>\n\n<html>\n<head>\n<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n<link rel='stylesheet' href='gooey-blob.css' type='text/css' media='screen'>\n<title>Gooey Blob Group</title>\n</head>\n<body>"
-    (1..(ARGV[0].to_i)).each do |num|
-      print "Grabbing page #{num} from Safari... "
-      raw = grab_page(num)
+  open_output do |file|
+    (1..max).each do |num|
+      print "Grabbing page #{num}/#{max} from Safari... "
+      raw = get_message(num)
       puts "done."
-      print "Parsing page #{num}... "
+      print "Parsing page #{num}/#{max}... "
       message = rip_email(raw, num)
       puts "done."
       if message
         messages << message
-        print "Adding to output/gooey-blob.html... "
-        file.puts "<div class='message'>"
-        file.puts "<div class='header'>"
-        file.puts "<span class='subject'><a href='http://games.groups.yahoo.com/group/gooeyblob/message/#{num}'>#{CGI.escapeHTML(message[0]['subject'])}</a></span>" if message[0]['subject']
-        file.puts "<span class='date'>#{CGI.escapeHTML(message[0]['date'])}</span>"if message[0]['date']
-        file.puts "<div class='from'>#{CGI.escapeHTML(message[0]['from'])}</div>" if message[0]['from']
-        file.puts "</div>"
-        file.puts "<div class='message-body'>"
-        file.puts "<pre>"
-        file.puts CGI.escapeHTML(message[1])
-        file.puts "</pre>"
-        file.puts "</div>"
-        file.puts "</div>"
-        puts "done."
+        write_message(file, message)
       else
         puts "No message found, skipping."
       end
     end
-    file.puts "</body>\n</html>"
   end
-  puts "Finished writing to output/gooey-blob.html"
-  print "Attempting to save all messages to output/messages.json... "
-  File.open('output/messages.json', 'w') do |file|
+  print "Attempting to save all messages to #{$yahoo_group}.json... "
+  File.open("#{$yahoo_group}.json", 'w') do |file|
     file.puts JSON.pretty_generate(messages)
   end
   puts "Done."
-else
-  puts "Usage: #{$0} [last message number on gooeyblob group]"
 end

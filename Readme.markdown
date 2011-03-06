@@ -4,10 +4,11 @@ Various utilities and resources for the Sinclair Spectrum computer game ‘Chaos
 gooey-blob-group/grab
 -------------------------
 
-Usage: grab [last message number on gooeyblob group]
-Each page will be loaded every 10 seconds and appended to output/gooey-blob.html
-All the messages will by saved as output/messages.json
-the gooey-blob.html file requires gooey-blob.css
+Usage: grab [--rehash]
+Each page will be loaded every 10 seconds and appended to gooeyblob.html
+All the messages will by saved as gooeyblob.json
+
+--rehash switch, reloads from gooeyblob.json to create gooeyblob.html 
 
 Requires hpricot, and json gems
 
