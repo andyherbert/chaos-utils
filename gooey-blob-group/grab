@@ -77,7 +77,8 @@ def write_message(file, message)
   file.puts "<span class='date'>#{CGI.escapeHTML(message[0]['date'])}</span>" if message[0]['date']
   file.puts "<div class='from'>#{CGI.escapeHTML(message[0]['from'])}</div>" if message[0]['from']
   file.puts "</div>"
-  file.puts "<div class='message-body'>\n<pre>\n#{CGI.escapeHTML(message[1])}\n</pre>\n</div>"
+  body = message[0]['content-transfer-encoding'] == 'quoted-printable' ? message[1].gsub(/\r\n/, "\n").unpack("M").first : message[1]
+  file.puts "<div class='message-body'>\n<pre>\n#{CGI.escapeHTML(body)}\n</pre>\n</div>"
   file.puts "</div>"
   puts "done."
 end
