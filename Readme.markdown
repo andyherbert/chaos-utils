@@ -15,8 +15,8 @@ Requires OS X, Safari, hpricot, and json gems
 ripper
 ------
 
-Usage: rip (requires chaos.sna in working directory)
-Will create gfx/ for ripped graphics, and data/ for various lookup tables.
+Usage: rip (requires chaos.sna in working directory)  
+Will create `gfx/` for ripped graphics, and `data/` for various lookup tables.
 
 Contact
 -------
