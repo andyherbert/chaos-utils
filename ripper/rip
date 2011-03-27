@@ -6,7 +6,10 @@ require 'json'
 $snapshot = 'chaos.sna'
 
 class Memory
-  ATTRIBUTES = [['#000000', '#0000CD', '#CD0000', '#CD00CD', '#00CD00', '#00CDCD', '#CDCD00', '#CDCDCD'], ['#000000', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF']]
+  ATTRIBUTES = [
+    ['#000000', '#0000CD', '#CD0000', '#CD00CD', '#00CD00', '#00CDCD', '#CDCD00', '#CDCDCD'],
+    ['#000000', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF']
+  ]
   
   def initialize(filename)
     @lookup = Array.new(16384 - 27)
@@ -78,7 +81,12 @@ class Memory
       :casting_chance => @lookup[table_address + 20],
       :chaos_law_value => @lookup[table_address + 21].chr.unpack('c').first,
       :frame_timing => @lookup[table_address + 22],
-      :frames => [gfx(table_address + 23), gfx(table_address + 26), gfx(table_address + 29), gfx(table_address + 32)],
+      :frames => [
+        gfx(table_address + 23),
+        gfx(table_address + 26),
+        gfx(table_address + 29),
+        gfx(table_address + 32)
+      ],
       :corpse => location <= 0xe414 ? gfx(table_address + 35) : nil,
       :mount => location >= 0xe3Fe && location <= 0xe408,
       :flying => location >= 0xe404 && location <= 0xe418,
