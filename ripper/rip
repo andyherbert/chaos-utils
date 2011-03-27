@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'json'
+
+$snapshot = 'chaos.sna'
+
+class Memory
+  ATTRIBUTES = [['#000000', '#0000CD', '#CD0000', '#CD00CD', '#00CD00', '#00CDCD', '#CDCD00', '#CDCDCD'], ['#000000', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF']]
+  
+  def initialize(filename)
+    @lookup = Array.new(16384 - 27)
+    File.open(filename, "r") do |file|
+      while !file.eof? do
+        @lookup << file.readbyte
+      end
+    end
+  end
+  
+  def objects(output = Array.new)
+    (0xe3e2..0xe43e).step(2) do |location|
+      output << data_table(location)
+    end
+    output
+  end
+  
+  def address(location)
+    (@lookup[location + 1] << 8) + @lookup[location]
+  end
+  
+  def text(location, length, output = String.new)
+    length.times do |num|
+      output += @lookup[location + num].chr
+    end
+    output.strip
+  end
+  
+  def attribute(location)
+    bin = @lookup[location].chr.unpack('B8').first
+    bright = bin[1, 1].to_i(2)
+    {
+      :paper => ATTRIBUTES[bright][bin[2, 3].to_i(2)],
+      :ink => ATTRIBUTES[bright][bin[5, 3].to_i(2)]
+    }
+  end
+  
+  def gfx_bytes(location, raw = Array.new, output = Array.new)
+    32.times do |num|
+      raw << @lookup[location + num].chr.unpack('B8').first
+    end
+    8.times do |num|
+      output << raw[num] + raw[num + 8]
+    end
+    8.times do |num|
+      output << raw[num + 16] + raw[num + 24]
+    end
+    output
+  end
+  
+  def gfx(location)
+    {
+      :bytes => gfx_bytes(address(location)),
+      :attribute => attribute(location + 2)
+    }
+  end
+  
+  def data_table(location)
+    table_address = address(location)
+    {
+      :name => text(table_address, 13),
+      :combat => @lookup[table_address + 13],
+      :ranged_combat => @lookup[table_address + 14],
+      :range => @lookup[table_address + 15],
+      :defence => @lookup[table_address + 16],
+      :movement_allowance => @lookup[table_address + 17],
+      :manoeuvre_rating => @lookup[table_address + 18],
+      :magic_resistance => @lookup[table_address + 19],
+      :casting_chance => @lookup[table_address + 20],
+      :chaos_law_value => @lookup[table_address + 21].chr.unpack('c').first,
+      :frame_timing => @lookup[table_address + 22],
+      :frames => [gfx(table_address + 23), gfx(table_address + 26), gfx(table_address + 29), gfx(table_address + 32)],
+      :corpse => location <= 0xe414 ? gfx(table_address + 35) : nil,
+      :mount => location >= 0xe3Fe && location <= 0xe408,
+      :flying => location >= 0xe404 && location <= 0xe418,
+      :undead => location >= 0xe416 && location <= 0xe420
+    }
+  end
+end
+
+
+File.open('objects.json', 'w') do |file|
+  file.puts JSON.pretty_generate(Memory.new($snapshot).objects)
+end
