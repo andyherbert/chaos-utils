@@ -28,7 +28,20 @@ class ChaosSnapshot
     end
   end
   
-  def each_object_sprite(output = Hash.new)
+  def characters
+    2.times do |bright_index|
+      (1..7).each do |ink_index|
+        letters = Array.new
+        (0xd908..0xDC00).step(8) do |location|
+          letters << render_frame(char_bytes(location), ATTRIBUTES[bright_index][ink_index])
+        end
+        yield letters, (bright_index * 8 + ink_index)
+      end
+    end
+  end
+  
+  def each_object_sprite
+    output = Hash.new
     each_chaos_object do |object|
       anim = Magick::ImageList.new
       object[:frames].each_with_index do |frame, num|
@@ -112,7 +125,7 @@ class ChaosSnapshot
   private
   
   def render_frame(bytes, ink = nil, paper = nil)
-    img = Image.new(16, 16)
+    img = Image.new(bytes.first.length, bytes.length)
     bytes.each_with_index do |line, y|
       line.split(//).each_with_index do |bit, x|
         img = img.color_point(x, y, (bit == '1') ? (ink || ATTRIBUTES[1][7]) : (paper || ATTRIBUTES[1][0]))
@@ -125,7 +138,8 @@ class ChaosSnapshot
     (@lookup[location + 1] << 8) + @lookup[location]
   end
   
-  def text(location, length, output = String.new)
+  def text(location, length)
+    output = String.new
     length.times do |num|
       output += @lookup[location + num].chr
     end
@@ -141,7 +155,21 @@ class ChaosSnapshot
     }
   end
   
-  def gfx_bytes(location, raw = Array.new, output = Array.new)
+  def char_bytes(location)
+    raw = Array.new
+    output = Array.new
+    8.times do |num|
+      output << @lookup[location + num].chr.unpack("B8").first
+    end
+    8.times do |num|
+      output << @lookup[location + 768 + num].chr.unpack("B8").first
+    end
+    output
+  end
+  
+  def gfx_bytes(location)
+    raw = Array.new
+    output = Array.new
     32.times do |num|
       raw << @lookup[location + num].chr.unpack('B8').first
     end
@@ -198,6 +226,8 @@ def dump_sprites(snapshot)
   Dir.mkdir 'gfx/corpses' unless File.directory? 'gfx/corpses'
   Dir.mkdir 'gfx/wizards' unless File.directory? 'gfx/wizards'
   Dir.mkdir 'gfx/weapons' unless File.directory? 'gfx/weapons'
+  Dir.mkdir 'gfx/character_set' unless File.directory? 'gfx/character_set'
+  
   
   snapshot.each_object_sprite do |name, anim, corpse|
     print "Dumping #{name} sprite... "
@@ -205,7 +235,7 @@ def dump_sprites(snapshot)
     corpse.write("gfx/corpses/#{name}.gif") if corpse
     puts "done."
   end
-
+  
   snapshot.each_wizard_sprite do |name, ink, anim|
     print "Dumping #{name} sprite (colour #{ink})... "
     path = "gfx/wizards/#{name}"
@@ -213,12 +243,22 @@ def dump_sprites(snapshot)
     anim.write(path + "/#{ink}.gif")
     puts "done."
   end
-
+  
   snapshot.each_weapon_sprite do |name, ink, anim|
     print "Dumping #{name} sprite (colour #{ink})... "
     path = "gfx/weapons/#{name}"
     Dir.mkdir path unless File.directory? path
     anim.write(path + "/#{ink}.gif")
+    puts "done."
+  end
+
+  snapshot.characters do |letters, ink|
+    print "Dumping character set sprite sheet (colour #{ink})... "
+    img = Image.new(letters.first.columns * letters.length, letters.first.rows)
+    letters.each_with_index do |letter, num|
+      img.composite!(letter, num * letters.first.columns, 0, Magick::OverCompositeOp)
+    end
+    img.write("gfx/character_set/#{ink}.gif")
     puts "done."
   end
 end
@@ -227,7 +267,7 @@ def dump_objects(snapshot)
   Dir.mkdir 'data' unless File.directory? 'data'
   
   data_table = Array.new
-
+  
   snapshot.each_chaos_object do |object|
     data_table << object unless object[:wizard]
   end
@@ -240,6 +280,5 @@ def dump_objects(snapshot)
 end
 
 snapshot = ChaosSnapshot.new($snapshot)
-
 dump_sprites(snapshot)
 dump_objects(snapshot)
