@@ -71,6 +71,55 @@ class ChaosSnapshot
     end
   end
   
+  def effects
+    anim = Magick::ImageList.new
+    (0xbfb7..0xc0b7).step(32) do |location|
+      anim << render_frame(gfx_bytes(location), ATTRIBUTES[1][7])
+    end
+    anim.ticks_per_second = 50
+    anim.delay = 1
+    anim.iterations = 1
+    yield 'EXPLODING CIRCLE', anim
+    
+    anim = Magick::ImageList.new
+    (0xa1e8..0xa20a).step(2) do |location|
+      anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[1][5])
+    end
+    anim.ticks_per_second = 50
+    anim.delay = 1
+    anim.iterations = 1
+    yield 'TWIRL', anim
+    
+    anim = Magick::ImageList.new
+    (0xa345..0xa405).step(32) do |location|
+      anim << render_frame(gfx_bytes(location), ATTRIBUTES[1][6])
+    end
+    anim.ticks_per_second = 50
+    anim.delay = 1
+    anim.iterations = 1
+    yield 'EXPLOSION', anim
+    
+    anim = Magick::ImageList.new
+    (0xc123..0xc223).step(32) do |location|
+      anim << render_frame(gfx_bytes(location), ATTRIBUTES[1][6])
+    end
+    anim.ticks_per_second = 50
+    anim.delay = 1
+    anim.iterations = 1
+    yield 'DRAGON BURN', anim
+    
+    anim = Magick::ImageList.new
+    5.times do |num|
+      (0xbf37..0xbf97).step(32) do |location|
+        anim << render_frame(gfx_bytes(location), ATTRIBUTES[1][6])
+      end
+    end
+    anim.ticks_per_second = 50
+    anim.delay = 1
+    anim.iterations = 1
+    yield 'ATTACK', anim
+  end
+  
   def each_weapon_sprite
     wizard_timing =  @lookup[address(0xe430) + 22]
     2.times do |bright_index|
@@ -227,7 +276,7 @@ def dump_sprites(snapshot)
   Dir.mkdir 'gfx/wizards' unless File.directory? 'gfx/wizards'
   Dir.mkdir 'gfx/weapons' unless File.directory? 'gfx/weapons'
   Dir.mkdir 'gfx/character_set' unless File.directory? 'gfx/character_set'
-  
+  Dir.mkdir 'gfx/effects' unless File.directory? 'gfx/effects'
   
   snapshot.each_object_sprite do |name, anim, corpse|
     print "Dumping #{name} sprite... "
@@ -251,7 +300,13 @@ def dump_sprites(snapshot)
     anim.write(path + "/#{ink}.gif")
     puts "done."
   end
-
+  
+  snapshot.effects do |name, anim|
+    print "Dumping #{name} effect... "
+    anim.write("gfx/effects/#{name}.gif")
+    puts "done."
+  end
+  
   snapshot.characters do |letters, ink|
     print "Dumping character set sprite sheet (colour #{ink})... "
     img = Image.new(letters.first.columns * letters.length, letters.first.rows)
@@ -280,5 +335,6 @@ def dump_objects(snapshot)
 end
 
 snapshot = ChaosSnapshot.new($snapshot)
+
 dump_sprites(snapshot)
 dump_objects(snapshot)
