@@ -18,6 +18,7 @@ ripper
 Usage: rip (requires chaos.sna in working directory)
 Will create gfx/ for ripped graphics, and data/ for various lookup tables.
 
----
+Contact
+-------
 
 andy.herbert@gmail.com
