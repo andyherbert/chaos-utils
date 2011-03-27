@@ -2,13 +2,15 @@
 
 require 'rubygems'
 require 'json'
+require 'RMagick'
+include Magick
 
 $snapshot = 'chaos.sna'
 
-class Memory
+class ChaosSnapshot
   ATTRIBUTES = [
-    ['#000000', '#0000CD', '#CD0000', '#CD00CD', '#00CD00', '#00CDCD', '#CDCD00', '#CDCDCD'],
-    ['#000000', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF']
+    ['#000000', '#0000cd', '#cd0000', '#cd00cd', '#00cd00', '#00cdcd', '#cdcd00', '#cdcdcd'],
+    ['#000000', '#0000ff', '#ff0000', '#ff00ff', '#00ff00', '#00ffff', '#ffff00', '#ffffff']
   ]
   
   def initialize(filename)
@@ -20,11 +22,103 @@ class Memory
     end
   end
   
-  def objects(output = Array.new)
+  def each_chaos_object
     (0xe3e2..0xe43e).step(2) do |location|
-      output << data_table(location)
+      yield lookup_data_table((location - 0xe3De) / 2, address(location))
     end
-    output
+  end
+  
+  def each_object_sprite(output = Hash.new)
+    each_chaos_object do |object|
+      anim = Magick::ImageList.new
+      object[:frames].each_with_index do |frame, num|
+        anim << render_frame(frame[:bytes], frame[:attribute][:ink], frame[:attribute][:paper])
+      end
+      anim.ticks_per_second = 50
+      anim.delay = object[:frame_timing]
+      yield(object[:name], anim, object[:corpse] ? render_frame(object[:corpse][:bytes], object[:corpse][:attribute][:ink], object[:corpse][:attribute][:paper]) : nil) unless object[:wizard]
+    end
+  end
+  
+  def each_wizard_sprite
+    each_chaos_object do |object|
+      if object[:wizard]
+        2.times do |bright_index|
+          (1..7).each do |ink_index|
+            anim = Magick::ImageList.new
+            object[:frames].each_with_index do |frame, num|
+              anim << render_frame(frame[:bytes], ATTRIBUTES[bright_index][ink_index])
+            end
+            anim.ticks_per_second = 50
+            anim.delay = object[:frame_timing]
+            yield(object[:name], (bright_index * 8 + ink_index), anim) if object[:wizard]
+          end
+        end
+      end
+    end
+  end
+  
+  def each_weapon_sprite
+    wizard_timing =  @lookup[address(0xe430) + 22]
+    2.times do |bright_index|
+      (1..7).each do |ink_index|
+        ink = bright_index * 8 + ink_index
+        anim = Magick::ImageList.new
+        (0x8290..0x8296).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC SWORD', ink, anim
+        anim = Magick::ImageList.new
+        (0x8298..0x829e).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC KNIFE', ink, anim
+        anim = Magick::ImageList.new
+        (0x82A0..0x82a6).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC ARMOUR', ink, anim
+        anim = Magick::ImageList.new
+        (0x82A8..0x82Ae).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC SHIELD', ink, anim
+        anim = Magick::ImageList.new
+        (0x82b0..0x82b6).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC WINGS', ink, anim
+        anim = Magick::ImageList.new
+        (0x82b8..0x82Be).step(2) do |location|
+          anim << render_frame(gfx_bytes(address(location)), ATTRIBUTES[bright_index][ink_index])
+        end
+        anim.ticks_per_second = 50
+        anim.delay = wizard_timing
+        yield 'MAGIC BOW', ink, anim
+      end
+    end
+  end
+  
+  private
+  
+  def render_frame(bytes, ink = nil, paper = nil)
+    img = Image.new(16, 16)
+    bytes.each_with_index do |line, y|
+      line.split(//).each_with_index do |bit, x|
+        img = img.color_point(x, y, (bit == '1') ? (ink || ATTRIBUTES[1][7]) : (paper || ATTRIBUTES[1][0]))
+      end
+    end
+    img.scale(2)
   end
   
   def address(location)
@@ -67,10 +161,10 @@ class Memory
     }
   end
   
-  def data_table(location)
-    table_address = address(location)
+  def lookup_data_table(id, table_address)
     {
       :name => text(table_address, 13),
+      :id => id,
       :combat => @lookup[table_address + 13],
       :ranged_combat => @lookup[table_address + 14],
       :range => @lookup[table_address + 15],
@@ -87,15 +181,65 @@ class Memory
         gfx(table_address + 29),
         gfx(table_address + 32)
       ],
-      :corpse => location <= 0xe414 ? gfx(table_address + 35) : nil,
-      :mount => location >= 0xe3Fe && location <= 0xe408,
-      :flying => location >= 0xe404 && location <= 0xe418,
-      :undead => location >= 0xe416 && location <= 0xe420
+      :corpse => id < 28 ? gfx(table_address + 35) : nil,
+      :mount => id > 15 && id < 22,
+      :flying => id > 18 && id < 30,
+      :undead => id > 27 && id < 34,
+      :transparent => id == 29 || id == 31 || id == 35,
+      :subvertable => id < @lookup[0x857B],
+      :wizard => id > 40
     }
   end
 end
 
+def dump_sprites(snapshot)
+  Dir.mkdir 'gfx' unless File.directory? 'gfx'
+  Dir.mkdir 'gfx/objects' unless File.directory? 'gfx/objects'
+  Dir.mkdir 'gfx/corpses' unless File.directory? 'gfx/corpses'
+  Dir.mkdir 'gfx/wizards' unless File.directory? 'gfx/wizards'
+  Dir.mkdir 'gfx/weapons' unless File.directory? 'gfx/weapons'
+  
+  snapshot.each_object_sprite do |name, anim, corpse|
+    print "Dumping #{name} sprite... "
+    anim.write("gfx/objects/#{name}.gif")
+    corpse.write("gfx/corpses/#{name}.gif") if corpse
+    puts "done."
+  end
 
-File.open('objects.json', 'w') do |file|
-  file.puts JSON.pretty_generate(Memory.new($snapshot).objects)
+  snapshot.each_wizard_sprite do |name, ink, anim|
+    print "Dumping #{name} sprite (colour #{ink})... "
+    path = "gfx/wizards/#{name}"
+    Dir.mkdir path unless File.directory? path
+    anim.write(path + "/#{ink}.gif")
+    puts "done."
+  end
+
+  snapshot.each_weapon_sprite do |name, ink, anim|
+    print "Dumping #{name} sprite (colour #{ink})... "
+    path = "gfx/weapons/#{name}"
+    Dir.mkdir path unless File.directory? path
+    anim.write(path + "/#{ink}.gif")
+    puts "done."
+  end
 end
+
+def dump_objects(snapshot)
+  Dir.mkdir 'data' unless File.directory? 'data'
+  
+  data_table = Array.new
+
+  snapshot.each_chaos_object do |object|
+    data_table << object unless object[:wizard]
+  end
+  
+  File.open('data/objects.json', 'w') do |file|
+    print "Creating object data... "
+    file.puts JSON.pretty_generate(data_table)
+    puts "done."
+  end
+end
+
+snapshot = ChaosSnapshot.new($snapshot)
+
+dump_sprites(snapshot)
+dump_objects(snapshot)
