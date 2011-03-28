@@ -2,8 +2,6 @@
 
 require 'rubygems'
 require 'json'
-require 'RMagick'
-include Magick
 
 $snapshot = 'chaos.sna'
 
