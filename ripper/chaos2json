@@ -1,0 +1,178 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'json'
+require 'RMagick'
+include Magick
+
+$snapshot = 'chaos.sna'
+
+class ChaosSnapshot
+  ATTRIBUTES = [
+    ['#000000', '#0000cd', '#cd0000', '#cd00cd', '#00cd00', '#00cdcd', '#cdcd00', '#cdcdcd'],
+    ['#000000', '#0000ff', '#ff0000', '#ff00ff', '#00ff00', '#00ffff', '#ffff00', '#ffffff']
+  ]
+  
+  def initialize(filename)
+    @memory = Array.new(16384 - 27, 0x00)
+    File.open(filename, "r") do |file|
+      while !file.eof? do
+        @memory << file.readbyte
+      end
+    end
+  end
+  
+  def address(location)
+    (@memory[location + 1] << 8) + @memory[location]
+  end
+  
+  def fetch_16x32(location)
+    raw = Array.new
+    output = Array.new
+    8.times do |num|
+      output << @memory[location + num].chr.unpack("H2").first
+    end
+    8.times do |num|
+      output << @memory[location + 768 + num].chr.unpack("H2").first
+    end
+    output.join
+  end
+  
+  def character_set
+    lookup = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©".split(//)
+    output = Hash.new
+    (0xd908..0xDC00).step(8) do |location|
+      output[lookup[(location - 0xd908) / 8]] = fetch_16x32(location)
+    end
+    output
+  end
+  
+  def objects
+    output = Hash.new
+    (0xe3e2..0xe42e).step(2) do |location|
+      object = lookup_data_table((location - 0xe3De) / 2, address(location))
+      output[object[:name].downcase.gsub(' ', '_')] = object
+    end
+    output
+  end
+  
+  def wizards
+    output = {:timing => @memory[address(0xe430) + 22], :sprites => [], :weapons => {:"magic_sword" => [], :"magic_knife" => [], :"magic_armour" => [], :"magic_shield" => [], :"magic_wings" => [], :"magic_bow" => []}}
+    (0xe430..0xe43e).step(2) do |location|
+      table_address = address(location)
+      output[:sprites] << data_table_sprite(table_address + 23)[:bytes]
+    end
+    (0x8290..0x8296).step(2) do |location|
+      output[:weapons][:"magic_sword"] << fetch_16x16(address(location))
+    end
+    (0x8298..0x829e).step(2) do |location|
+      output[:weapons][:"magic_knife"] << fetch_16x16(address(location))
+    end
+    (0x82A0..0x82a6).step(2) do |location|
+      output[:weapons][:"magic_armour"] << fetch_16x16(address(location))
+    end
+    (0x82A8..0x82Ae).step(2) do |location|
+      output[:weapons][:"magic_shield"] << fetch_16x16(address(location))
+    end
+    (0x82b0..0x82b6).step(2) do |location|
+      output[:weapons][:"magic_wings"] << fetch_16x16(address(location))
+    end
+    (0x82b8..0x82Be).step(2) do |location|
+      output[:weapons][:"magic_bow"] << fetch_16x16(address(location))
+    end
+    output
+  end
+  
+  def effects
+    output = {:timing => 1, :"exploding_circle" => [], :"twirl" => [], :"explosion" => [], :"dragon_burn" => [], :"attack" => []}
+    (0xbfb7..0xc0b7).step(32) do |location|
+      output[:"exploding_circle"] << fetch_16x16(location)
+    end
+    (0xa1e8..0xa20a).step(2) do |location|
+      output[:"twirl"] << fetch_16x16(address(location))
+    end
+    (0xa345..0xa405).step(32) do |location|
+      output[:"explosion"] << fetch_16x16(location)
+    end
+    (0xc123..0xc223).step(32) do |location|
+      output[:"dragon_burn"] << fetch_16x16(location)
+    end
+    5.times do |num|
+      (0xbf37..0xbf97).step(32) do |location|
+        output[:"attack"] << fetch_16x16(location)
+      end
+    end
+    output
+  end
+  
+  def fetch_16x16(location)
+    raw = Array.new
+    output = Array.new
+    32.times do |num|
+      raw << @memory[location + num].chr.unpack('H2').first
+      # raw << @memory[location + num].chr.unpack('B8').first
+    end
+    8.times do |num|
+      output << raw[num] + raw[num + 8]
+    end
+    8.times do |num|
+      output << raw[num + 16] + raw[num + 24]
+    end
+    output.join
+    # output
+  end
+  
+  def data_table_sprite(location)
+    bin = @memory[location + 2].chr.unpack('B8').first
+    bright = bin[1, 1].to_i(2)
+    {
+      :bytes => fetch_16x16(address(location)),
+      :paper => ATTRIBUTES[bright][bin[2, 3].to_i(2)],
+      :ink => ATTRIBUTES[bright][bin[5, 3].to_i(2)]
+    }
+  end
+  
+  def text(location, length)
+    output = String.new
+    length.times do |num|
+      output += @memory[location + num].chr
+    end
+    output.strip
+  end
+  
+  def lookup_data_table(id, table_address)
+    {
+      :name => text(table_address, 13),
+      :id => id,
+      :combat => @memory[table_address + 13],
+      :ranged_combat => @memory[table_address + 14],
+      :range => @memory[table_address + 15],
+      :defence => @memory[table_address + 16],
+      :movement_allowance => @memory[table_address + 17],
+      :manoeuvre_rating => @memory[table_address + 18],
+      :magic_resistance => @memory[table_address + 19],
+      :casting_chance => @memory[table_address + 20],
+      :chaos_law_value => @memory[table_address + 21].chr.unpack('c').first,
+      :anim_timing => @memory[table_address + 22],
+      :anim => [
+        data_table_sprite(table_address + 23),
+        data_table_sprite(table_address + 26),
+        data_table_sprite(table_address + 29),
+        data_table_sprite(table_address + 32)
+      ],
+      :corpse => id < 28 ? data_table_sprite(table_address + 35) : nil,
+      :mount => id > 15 && id < 22,
+      :flying => id > 18 && id < 30,
+      :undead => id > 27 && id < 34,
+      :transparent => id == 29 || id == 31 || id == 35,
+      :subvertable => id < @memory[0x857B]
+    }
+  end
+end
+
+snapshot = ChaosSnapshot.new($snapshot)
+
+# puts JSON.pretty_generate(snapshot.objects)
+# puts JSON.pretty_generate(snapshot.wizards)
+# puts JSON.pretty_generate(snapshot.character_set)
+puts JSON.pretty_generate(snapshot.effects)
