@@ -42,7 +42,7 @@ class Chaos
     lookup = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©".split(//)
     output = Hash.new
     (0xd908..0xDC00).step(8) do |location|
-      output[lookup[(location - 0xd908) / 8]] = fetch_16x32(location)
+      output[lookup[(location - 0xd908) / 8]] = fetch_8x16(location)
     end
     output
   end
@@ -222,7 +222,7 @@ class Chaos
     output.join
   end
   
-  def fetch_16x32(location)
+  def fetch_8x16(location)
     raw = Array.new
     output = Array.new
     8.times do |num|
