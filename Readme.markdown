@@ -20,7 +20,7 @@ into memory.
 
     Usage: chaos2json (requires chaos.sna in working directory)
   
-Will create `gfx/` for ripped graphics, and `data/` for various lookup tables.
+Will create `chaos.json` in the working directory.
 
 # Contact
 
