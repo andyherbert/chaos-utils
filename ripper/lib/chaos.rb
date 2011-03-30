@@ -239,8 +239,8 @@ class Chaos
     bright, paper, ink = (bin[1, 1].to_i(2) == 1), bin[2, 3].to_i(2), bin[5, 3].to_i(2)
     {
       :bytes => fetch_16x16(address(location)),
-      :paper => bright ? paper + 7 : paper,
-      :ink => bright ? ink + 7 : ink
+      :paper => bright ? paper + 8 : paper,
+      :ink => bright ? ink + 8 : ink
     }
   end
   
