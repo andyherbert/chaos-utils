@@ -47,6 +47,10 @@ class Chaos
     output
   end
   
+  def border
+    [fetch_16x16(0xbb15), fetch_16x16(0xbb15 + 32)]
+  end
+  
   def objects
     output = Hash.new
     (0xe3e2..0xe42e).step(2) do |location|
@@ -191,7 +195,8 @@ class Chaos
       :messages => messages,
       :spells => spells,
       :constants => constants,
-      :initial_positions => initial_positions
+      :initial_positions => initial_positions,
+      :border => border
     }
   end
   
