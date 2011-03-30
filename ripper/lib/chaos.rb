@@ -39,7 +39,7 @@ class Chaos
   end
   
   def character_set
-    lookup = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\xa3abcdefghijklmnopqrstuvwxyz{|}~\xa9".split(//)
+    lookup = " !\"\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©".split(//u)
     output = Hash.new
     (0xd908..0xDC00).step(8) do |location|
       output[lookup[(location - 0xd908) / 8]] = fetch_8x16(location)

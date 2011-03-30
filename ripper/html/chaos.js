@@ -129,7 +129,7 @@ function dump_gfx() {
   var pen;
   for (pen = 1; pen < 16; pen += 1) {
     if (pen !== 8) {
-      $('output').appendChild(render_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz{|}~", pen));
+      $('output').appendChild(render_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©", pen));
     }
   }
   $('output').appendChild(document.createElement('BR'));
