@@ -2,6 +2,9 @@
 
 ## gooey-blob-group/grab
 
+Dumps all the messages from the ‘GooeyBlob’ Yahoo group into a single html
+and json file.
+
     Usage: grab [--rehash]
 
 Each page will be loaded every 10 seconds and appended to gooeyblob.html
@@ -18,9 +21,10 @@ into memory.
 
 ## ripper/chaos2json
 
+Uses the Chaos ruby library to output all the data hidden in a snapshot to
+json.
+
     Usage: chaos2json (requires chaos.sna in working directory)
-  
-Will create `chaos.json` in the working directory.
 
 # Contact
 

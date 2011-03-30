@@ -3,7 +3,4 @@ require 'rubygems'
 require 'json'
 require 'lib/chaos'
 
-File.open('chaos.json', 'w') do |file|
-  file.puts JSON.pretty_generate(Chaos.new('chaos.sna').dump)
-end
-puts 'Snapshot dumped as chaos.json.'
+puts JSON.pretty_generate(Chaos.new('chaos.sna').dump)

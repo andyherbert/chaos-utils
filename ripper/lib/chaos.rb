@@ -281,3 +281,8 @@ class Chaos
     }
   end
 end
+
+=begin
+  TODO include accomodation in object list
+  TODO test with ruby 2
+=end
