@@ -8,7 +8,6 @@ function $(element_id) {
 function http_get(url, success, failure) {
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
-  req.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
   req.onreadystatechange = function () {
     if (req.readyState === 4) {
       if (req.status === 200 || req.status === 0) {
