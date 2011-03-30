@@ -164,6 +164,16 @@ function dump_gfx() {
       $('output').appendChild(render_sprite(frame.bytes, frame.ink, frame.paper));
     });
   });
+  $('output').appendChild(document.createElement('BR'));
+  chaos.border.each(function (border) {
+    for (paper = 0; paper < 7; paper += 1) {
+      for (pen = 1; pen < 16; pen += 1) {
+        if (pen !== paper) {
+          $('output').appendChild(render_sprite(border, pen, paper));
+        }
+      }
+    }
+  });
 }
 
 function init() {
