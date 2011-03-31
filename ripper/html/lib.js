@@ -10,7 +10,7 @@ function http_get(url, success, failure) {
     if (req.readyState === 4) {
       if (req.status === 200 || req.status === 0) {
         if (success !== undefined) {
-          success(JSON.parse(req.responseText));
+          success(req.responseText);
         }
       } else {
         if (failure !== undefined) {

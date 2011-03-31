@@ -13,18 +13,28 @@
     margin: 0;
   }
   
-  #output {
-    width: 960px;
-    margin: 0px auto;
+  #canvas_frame, #output {
+    width: 512px;
+    height: 384px;
+  }
+  
+  #canvas_frame {
+    margin: 16px auto;
   }
   </style>
 </head>
 <body>
-  <div id='output'>
-    
+  <div id='canvas_frame'>
+    <canvas id='output' width="512" height="384"></canvas>
   </div>
   <script type="text/javascript">
-  init();
+ChaosLibrary.fetch(function (obj) {
+  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, 9, 0), 0, 0);
+  $('output').getContext('2d').drawImage(ChaosLibrary.object(2).anim[0], 16, 16);
+  $('output').getContext('2d').drawImage(ChaosLibrary.text('Animation test', 13, 0), 0, 352);
+}, function (status) {
+  // console.log(status);
+});
   </script>
 </body>
 </html>
