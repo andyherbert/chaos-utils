@@ -88,6 +88,28 @@ function insert_rgb(image_data, x, y, target_array) {
   return image_data;
 }
 
+function scale(canvas, factor) {
+  var image_data, dest, dest_ctx, dest_image_data, source_y, source_x, source_index, i, colour = [], x, y, target_index;
+  image_data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+  dest = create_canvas(canvas.width * factor, canvas.height * factor);
+  dest_ctx = dest.getContext('2d');
+  dest_image_data = dest_ctx.getImageData(0, 0, dest.width, dest.height);
+  for (source_y = 0; source_y < canvas.height; source_y += 1) {
+    for (source_x = 0; source_x < canvas.width; source_x += 1) {
+      source_index = (source_y * canvas.width + source_x) * 4;
+      for (i = 0; i < 4; i += 1) { colour[i] = image_data.data[source_index + i]; }
+      for (y = 0; y < factor; y += 1) {
+        for (x = 0; x < factor; x += 1) {
+          target_index = ((source_y * factor + y) * dest.width + source_x * factor + x) * 4;
+          for (i = 0; i < 4; i += 1) { dest_image_data.data[target_index + i] = colour[i]; }
+        }
+      }
+    }
+  }
+  dest_ctx.putImageData(dest_image_data, 0, 0);
+  return dest;
+}
+
 function render_sprite(bytes, ink, paper) {
   var bits, canvas, ctx, image_data;
   
@@ -106,13 +128,13 @@ function render_sprite(bytes, ink, paper) {
     });
   });
   ctx.putImageData(image_data, 0, 0);
-  return canvas;
+  return scale(canvas, 2);
 }
 
 function render_text(text, ink, paper) {
-  var canvas = create_canvas(text.length * 8, 16), ctx = canvas.getContext('2d');
+  var canvas = create_canvas(text.length * 16, 32), ctx = canvas.getContext('2d');
   text.each_char_with_index(function (character, index) {
-    ctx.drawImage(render_sprite(chaos.character_set[character], ink, paper), index * 8, 0);
+    ctx.drawImage(render_sprite(chaos.character_set[character], ink, paper), index * 16, 0);
   });
   return canvas;
 }
@@ -126,34 +148,34 @@ function expand_palette(palette) {
 }
 
 function dump_gfx() {
-  var pen;
-  for (pen = 1; pen < 16; pen += 1) {
-    if (pen !== 8) {
-      $('output').appendChild(render_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©", pen));
+  var ink, paper;
+  for (ink = 1; ink < 16; ink += 1) {
+    if (ink !== 8) {
+      $('output').appendChild(render_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©", ink));
     }
   }
   $('output').appendChild(document.createElement('BR'));
   chaos.cursors.each(function (cursor) {
-    for (pen = 1; pen < 16; pen += 1) {
-      if (pen !== 8) {
-        $('output').appendChild(render_sprite(cursor, pen));
+    for (ink = 1; ink < 16; ink += 1) {
+      if (ink !== 8) {
+        $('output').appendChild(render_sprite(cursor, ink));
       }
     }
     $('output').appendChild(document.createElement('BR'));
   });
   chaos.wizards.characters.each(function (character) {
-    for (pen = 1; pen < 16; pen += 1) {
-      if (pen !== 8) {
-        $('output').appendChild(render_sprite(character, pen));
+    for (ink = 1; ink < 16; ink += 1) {
+      if (ink !== 8) {
+        $('output').appendChild(render_sprite(character, ink));
       }
     }
     $('output').appendChild(document.createElement('BR'));
   });
   chaos.wizards.weapons.each(function (weapon) {
     weapon.each(function (frame) {
-      for (pen = 1; pen < 16; pen += 1) {
-        if (pen !== 8) {
-          $('output').appendChild(render_sprite(frame, pen));
+      for (ink = 1; ink < 16; ink += 1) {
+        if (ink !== 8) {
+          $('output').appendChild(render_sprite(frame, ink));
         }
       }
     });
@@ -167,9 +189,9 @@ function dump_gfx() {
   $('output').appendChild(document.createElement('BR'));
   chaos.border.each(function (border) {
     for (paper = 0; paper < 7; paper += 1) {
-      for (pen = 1; pen < 16; pen += 1) {
-        if (pen !== paper) {
-          $('output').appendChild(render_sprite(border, pen, paper));
+      for (ink = 1; ink < 16; ink += 1) {
+        if (ink !== paper) {
+          $('output').appendChild(render_sprite(border, ink, paper));
         }
       }
     }
