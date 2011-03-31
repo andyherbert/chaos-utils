@@ -289,6 +289,5 @@ end
 
 =begin
   TODO include accomodation in object list
-  TODO test with ruby 2
-  TODO include border graphics
+  TODO test with latest ruby
 =end
