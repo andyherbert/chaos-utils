@@ -52,10 +52,10 @@ class Chaos
   end
   
   def objects
-    output = Hash.new
+    output = Array.new
     (0xe3e2..0xe42e).step(2) do |location|
       object = lookup_data_table((location - 0xe3de) / 2, address(location))
-      output[object[:name].downcase.gsub(' ', '_')] = object
+      output[object[:id]] = object
     end
     output
   end
@@ -282,12 +282,8 @@ class Chaos
       :flying => id > 18 && id < 30,
       :undead => id > 27 && id < 34,
       :transparent => id == 29 || id == 31 || id == 35,
-      :subvertable => id < @memory[0x857B]
+      :subvertable => id < @memory[0x857B],
+      :shelter =>  id  > 35 && id < 41
     }
   end
 end
-
-=begin
-  TODO include accomodation in object list
-  TODO test with latest ruby
-=end
