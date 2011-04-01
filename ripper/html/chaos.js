@@ -1,7 +1,7 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
 /*global $: true, create_canvas: true, http_get: true */
 var ChaosLibrary = (function () {
-  var json, parsed_objects = [], character_set = [], border = [];
+  var json, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [];
   
   function expand_palette(palette) {
     var output = [];
@@ -90,13 +90,36 @@ var ChaosLibrary = (function () {
   }
   
   function fetch_border(ink, paper) {
-    if (border[ink] === undefined) {
-      border[ink] = [];
+    if (borders[ink] === undefined) {
+      borders[ink] = [];
     }
-    if (border[ink][paper] === undefined) {
-      border[ink][paper] = [render_sprite(json.border[0], ink, paper), render_sprite(json.border[1], ink, paper)];
+    if (borders[ink][paper] === undefined) {
+      borders[ink][paper] = [render_sprite(json.border[0], ink, paper), render_sprite(json.border[1], ink, paper)];
     }
-    return border[ink][paper];
+    return borders[ink][paper];
+  }
+  
+  function fetch_wizard(wizard_index, ink) {
+    if (wizards[ink] === undefined) {
+      wizards[ink] = [];
+    }
+    if (wizards[ink][wizard_index] === undefined) {
+      wizards[ink][wizard_index] = render_sprite(json.wizards.characters[wizard_index], ink, 0);
+    }
+    return wizards[ink][wizard_index];
+  }
+  
+  function fetch_weapon(key, ink) {
+    if (weapons[ink] === undefined) {
+      weapons[ink] = {};
+    }
+    if (weapons[ink][key] === undefined) {
+      weapons[ink][key] = [];
+      json.wizards.weapons[key].each(function (frame) {
+        weapons[ink][key][weapons[ink][key].length] = render_sprite(frame, ink);
+      });
+    }
+    return weapons[ink][key];
   }
   
   function init(response_text) {
@@ -115,13 +138,28 @@ var ChaosLibrary = (function () {
     },
     
     "object": function (object_id) {
-      if (parsed_objects[object_id] === undefined) {
-        parsed_objects[object_id] = json.objects[object_id];
-        parsed_objects[object_id].anim.each_pair(function (key, frame) {
-          parsed_objects[object_id].anim[key] = render_sprite(frame.bytes, frame.ink, frame.paper);
+      if (objects[object_id] === undefined) {
+        objects[object_id] = json.objects[object_id].clone();
+        objects[object_id].anim.each_pair(function (key, frame) {
+          objects[object_id].anim[key] = render_sprite(frame.bytes, frame.ink, frame.paper);
         });
+        objects[object_id].corpse = render_sprite(json.objects[object_id].corpse.bytes, json.objects[object_id].corpse.ink, json.objects[object_id].corpse.paper);
       }
-      return parsed_objects[object_id];
+      return objects[object_id];
+    },
+    
+    "rainbow_object": function (object_id) {
+      var ink;
+      if (rainbow_object[object_id] === undefined) {
+        rainbow_object[object_id] = [];
+        for (ink = 0; ink < 7; ink += 1) {
+          rainbow_object[object_id][ink] = [];
+          json.objects[object_id].anim.each_pair(function (key, frame) {
+            rainbow_object[object_id][ink][key] = render_sprite(frame.bytes, 15 - ink);
+          });
+        }
+      }
+      return rainbow_object[object_id];
     },
     
     "text": function (text, ink, paper) {
@@ -159,60 +197,66 @@ var ChaosLibrary = (function () {
       ctx.drawImage(border[1], 0, size, size, size, 0, height - size, size, size);
       ctx.drawImage(border[1], size, size, size, size, width - size, height - size, size, size);
       return canvas;
+    },
+    
+    "cursor": function (name, ink) {
+      if (cursors[ink] === undefined) {
+        cursors[ink] = {};
+      }
+      if (cursors[ink][name] === undefined) {
+        cursors[ink][name] = render_sprite(json.cursors[name], ink);
+      }
+      return cursors[ink][name];
+    },
+    
+    "wizard": function (wizard_index, ink) {
+      return fetch_wizard(wizard_index, ink);
+    },
+    
+    "rainbow_wizard": function (wizard_index) {
+      var ink;
+      if (rainbow_wizard[wizard_index] === undefined) {
+        rainbow_wizard[wizard_index] = [];
+        for (ink = 0; ink < 7; ink += 1) {
+          rainbow_wizard[wizard_index][ink] = fetch_wizard(wizard_index, 15 - ink);
+        }
+      }
+      return rainbow_wizard[wizard_index];
+    },
+    
+    "weapon": function (name, ink) {
+      return fetch_weapon(name, ink);
+    },
+    
+    "rainbow_weapon": function (name) {
+      var ink;
+      if (rainbow_weapon[name] === undefined) {
+        rainbow_weapon[name] = [];
+        for (ink = 0; ink < 7; ink += 1) {
+          rainbow_weapon[name][ink] = fetch_weapon(name, 15 - ink);
+        }
+      }
+      return rainbow_weapon[name];
+    },
+    
+    "spells": function () {
+      return json.spells;
+    },
+    
+    "interface_messages": function () {
+      return json.messages['interface'];
+    },
+    
+    "in_game_messages": function () {
+      return json.messages.in_game;
+    },
+    
+    "constants": function () {
+      return json.constants;
+    },
+    
+    "initial_positions": function (number_of_wizards) {
+      return json.initial_positions[number_of_wizards - 2];
     }
   };
 }());
-
-// function render_text(text, ink, paper) {
-// }
-
-// function dump_gfx() {
-//   var ink, paper;
-//   for (ink = 1; ink < 16; ink += 1) {
-//     if (ink !== 8) {
-//       $('output').appendChild(render_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_£abcdefghijklmnopqrstuvwxyz{|}~©", ink));
-//     }
-//   }
-//   $('output').appendChild(document.createElement('BR'));
-//   chaos.cursors.each(function (cursor) {
-//     for (ink = 1; ink < 16; ink += 1) {
-//       if (ink !== 8) {
-//         $('output').appendChild(render_sprite(cursor, ink));
-//       }
-//     }
-//     $('output').appendChild(document.createElement('BR'));
-//   });
-//   chaos.wizards.characters.each(function (character) {
-//     for (ink = 1; ink < 16; ink += 1) {
-//       if (ink !== 8) {
-//         $('output').appendChild(render_sprite(character, ink));
-//       }
-//     }
-//     $('output').appendChild(document.createElement('BR'));
-//   });
-//   chaos.wizards.weapons.each(function (weapon) {
-//     weapon.each(function (frame) {
-//       for (ink = 1; ink < 16; ink += 1) {
-//         if (ink !== 8) {
-//           $('output').appendChild(render_sprite(frame, ink));
-//         }
-//       }
-//     });
-//     $('output').appendChild(document.createElement('BR'));
-//   });
-//   chaos.objects.each(function (object) {
-//     object.anim.each(function (frame) {
-//       $('output').appendChild(render_sprite(frame.bytes, frame.ink, frame.paper));
-//     });
-//   });
-//   $('output').appendChild(document.createElement('BR'));
-//   chaos.border.each(function (border) {
-//     for (paper = 0; paper < 7; paper += 1) {
-//       for (ink = 1; ink < 16; ink += 1) {
-//         if (ink !== paper) {
-//           $('output').appendChild(render_sprite(border, ink, paper));
-//         }
-//       }
-//     }
-//   });
-// }

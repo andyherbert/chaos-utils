@@ -56,6 +56,20 @@ Object.prototype.each_char = function (func) {
   });
 };
 
+Object.prototype.clone = function () {
+  var i, obj = {};
+  for (i in this) {
+    if (this.hasOwnProperty(i)) {
+      if (typeof this[i] === 'object') {
+        obj[i] = this[i].clone();
+      } else {
+        obj[i] = this[i];
+      }
+    }
+  }
+  return obj;
+};
+
 function create_canvas(width, height) {
   var canvas = document.createElement('CANVAS');
   canvas.setAttribute('WIDTH', width);

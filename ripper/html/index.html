@@ -28,12 +28,30 @@
     <canvas id='output' width="512" height="384"></canvas>
   </div>
   <script type="text/javascript">
+function draw_sprite(sprite, x, y) {
+  $('output').getContext('2d').drawImage(sprite, 16 + x * 32, 16 + y * 32);
+}
+
+function draw_text(text) {
+  $('output').getContext('2d').drawImage(ChaosLibrary.text(text, 13, 0), 0, 352);
+}
+
+function draw_border(ink, paper) {
+  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, ink, paper), 0, 0);
+}
+
 ChaosLibrary.fetch(function (obj) {
-  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, 9, 0), 0, 0);
-  $('output').getContext('2d').drawImage(ChaosLibrary.object(2).anim[0], 16, 16);
-  $('output').getContext('2d').drawImage(ChaosLibrary.text('Animation test', 13, 0), 0, 352);
+  draw_text('Animation Test');
+  draw_border(9, 0);
+  draw_sprite(ChaosLibrary.object(2).corpse, 0, 0);
+  draw_sprite(ChaosLibrary.cursor('box', 13), 0, 0);
+  draw_sprite(ChaosLibrary.wizard(0, 10), 1, 1);
+  draw_sprite(ChaosLibrary.weapon("magic_sword", 15)[0], 9, 4);
+  draw_sprite(ChaosLibrary.rainbow_wizard(3)[0], 9, 4);
+  draw_sprite(ChaosLibrary.rainbow_object(2)[6][1], 8, 4);
+  draw_sprite(ChaosLibrary.rainbow_object(2)[6][0], 7, 4);
 }, function (status) {
-  // console.log(status);
+  console.log(status);
 });
   </script>
 </body>
