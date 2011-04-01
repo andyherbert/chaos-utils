@@ -18,10 +18,10 @@ class Chaos
       :trees_per_cast => @memory[0x9ade],
       :castles_per_cast => @memory[0x9aeb],
       :walls_per_cast => @memory[0x9b77],
-      :decree_per_cast => @memory[0x9dfc],
-      :vengeance_per_cast => @memory[0x9dfc],
-      :justice_per_cast => @memory[0x9dfc],
-      :darkpower_per_cast => @memory[0x9dfc]
+      :decree_per_cast => @memory[0x9dfd],
+      :vengeance_per_cast => @memory[0x9dfd],
+      :justice_per_cast => @memory[0x9e07],
+      :darkpower_per_cast => @memory[0x9e07]
     }
   end
   
