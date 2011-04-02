@@ -200,14 +200,14 @@ class Chaos
   private
   
   def scr_dump
-    output = {:screen => Array.new, :attributes => Array.new}
+    output = {:pixels => Array.new, :attributes => Array.new}
     3.times do |i|
       8.times do |k|
         8.times do |j|
           offset = (i * 64 + j * 8 + k) * 32
-          output[:screen][output[:screen].length] = String.new;
+          output[:pixels][output[:pixels].length] = String.new;
           32.times do |x|
-            output[:screen].last << @screen[offset + x].chr.unpack('H2').first
+            output[:pixels].last << @screen[offset + x].chr.unpack('H2').first
           end
         end
       end
