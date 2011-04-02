@@ -39,7 +39,7 @@ function draw_text(text, ink) {
 }
 
 function draw_border(ink, paper) {
-  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, ink, paper), 0, 0);
+  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, ink, paper ? paper : 0), 0, 0);
 }
 
 ChaosLibrary.init(function (obj) {

@@ -79,7 +79,7 @@ var ChaosLibrary = (function () {
   function render_object(anim, ink, paper) {
     var output = [];
     anim.each_pair(function (key, frame) {
-      output[output.length] = render_sprite(frame.bytes, ink ? ink : frame.ink, paper ? paper : frame.paper);
+      output[output.length] = render_sprite(frame.bytes, (ink === undefined) ? frame.ink : ink, (paper === undefined) ? frame.paper : paper);
     });
     return output;
   }
@@ -159,7 +159,7 @@ var ChaosLibrary = (function () {
       if (rainbow_object[object_id] === undefined) {
         rainbow_object[object_id] = [];
         for (ink = 0; ink < 7; ink += 1) {
-          rainbow_object[object_id][ink] = render_object(json.objects[object_id].anim, 15 - ink);
+          rainbow_object[object_id][ink] = render_object(json.objects[object_id].anim, 15 - ink, 0);
         }
       }
       return rainbow_object[object_id];
