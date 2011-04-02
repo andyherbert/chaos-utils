@@ -71,8 +71,7 @@ Object.prototype.clone = function () {
 };
 
 Object.prototype.hex_to_binary = function () {
-  var output = '';
-  output = parseInt(this, 16).toString(2);
+  var output = parseInt(this, 16).toString(2);
   while (output.length < 8) {
     output = '0' + output;
   }
