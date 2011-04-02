@@ -6,7 +6,7 @@
   <title>Chaos</title>
   <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhUlEQVQ4EZ2SgQrAIAhEdez/f9klTLnsZqNAsu7uVWMqIjbqeFzHyTfYAsxMvLrRArpgaDqa5YjdqRlWleUGLKzD6IUj1gnA94aIAe/ZfgKYWAEMkoAw/wGhZwEECGf2XUKfAEgOw26eADsz0ymAXZntOfBG6pcJPbWnf2I1dWv6hC5QtQfK4CEgAQxPAAAAAABJRU5ErkJggg==" />
   <script src="lib.js" type="text/javascript" charset="utf-8"></script>
-  <script src="chaos.js" type="text/javascript" charset="utf-8"></script>
+  <script src="Storage.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css" media="screen">
   body {
     background-color: black;
@@ -35,20 +35,20 @@ function draw_sprite(sprite, x, y) {
 }
 
 function draw_text(text, ink) {
-  $('output').getContext('2d').drawImage(ChaosLibrary.text(text, ink ? ink : 15, 0), 0, 352);
+  $('output').getContext('2d').drawImage(Storage.text(text, (ink === undefined) ? 15 : ink, 0), 0, 352);
 }
 
 function draw_border(ink, paper) {
-  $('output').getContext('2d').drawImage(ChaosLibrary.border(512, 352, ink, paper ? paper : 0), 0, 0);
+  $('output').getContext('2d').drawImage(Storage.border(512, 352, ink, (paper === undefined) ? 0 : paper), 0, 0);
 }
 
-ChaosLibrary.init(function (obj) {
-  draw_text(ChaosLibrary.interface_message(0), 14);
+Storage.init(function (obj) {
+  draw_text(Storage.interface_message(0), 14);
   draw_border(9, 0);
-  draw_sprite(ChaosLibrary.object(2).anim[3], 4, 5);
-  draw_sprite(ChaosLibrary.cursor('box', 13), 0, 0);
-  draw_sprite(ChaosLibrary.wizard(0, 10), 1, 1);
-  draw_sprite(ChaosLibrary.weapon("magic_sword", 15)[0], 9, 4);
+  draw_sprite(Storage.object(2).anim[3], 4, 5);
+  draw_sprite(Storage.cursor('box', 13), 0, 0);
+  draw_sprite(Storage.wizard(0, 10), 1, 1);
+  draw_sprite(Storage.weapon("magic_sword", 15)[0], 9, 4);
 }, function (status) {
   alert('Could not obtain resource file: (' + status + ')');
 });
