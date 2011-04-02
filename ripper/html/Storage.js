@@ -1,7 +1,7 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
 /*global $: true, create_canvas: true, http_get: true */
 var Storage = (function () {
-  var json, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [];
+  var json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
   
   function expand_palette(palette) {
     var output = [];
@@ -12,14 +12,12 @@ var Storage = (function () {
   }
   
   function get_bits(bytes) {
-    var image_width = bytes.length / 32, output = [], i, x, y, bits;
+    var image_width = bytes.length / 32, output = [], i, x, y;
     for (i = 0; i < bytes.length; i += 2 * image_width) {
       y = i / (2 * image_width);
       output[y] = '';
       for (x = 0; x < image_width; x += 1) {
-        bits = parseInt(bytes.substr(i + x * 2, 2), 16).toString(2);
-        while (bits.length < 8) { bits = '0' + bits; }
-        output[y] += bits;
+        output[y] += bytes.substr(i + x * 2, 2).hex_to_binary();
       }
     }
     return output;
@@ -47,10 +45,10 @@ var Storage = (function () {
     return dest;
   }
   
-  function insert_rgb(image_data, x, y, target_array) {
+  function insert_rgb(image_data, x, y, rgb) {
     var i, index = (y * image_data.width + x) * 4;
     for (i = 0; i < 3; i += 1) {
-      image_data.data[index + i] = target_array[i];
+      image_data.data[index + i] = rgb[i];
     }
     image_data.data[index + 3] = 255;
     return image_data;
@@ -65,13 +63,12 @@ var Storage = (function () {
     bits.each_pair(function (y, line) {
       line.each_char_with_index(function (character, x) {
         if (line.substr(x, 1) === '1') {
-          image_data = insert_rgb(image_data, x, y, json.palette[ink]);
+          image_data = insert_rgb(image_data, x, y, palette[ink]);
         } else if (paper !== undefined) {
-          image_data = insert_rgb(image_data, x, y, json.palette[paper]);
+          image_data = insert_rgb(image_data, x, y, palette[paper]);
         }
       });
     });
-    // console.log('rendered sprite');
     ctx.putImageData(image_data, 0, 0);
     return scale(canvas, 2);
   }
@@ -130,15 +127,60 @@ var Storage = (function () {
     return weapons[ink][key];
   }
   
-  function init(response_text) {
-    json = JSON.parse(response_text);
-    json.palette = expand_palette(json.palette);
+  function get_attribute(attribute) {
+    return {
+      'flash': (attribute.substr(0, 1) === '1'),
+      'bright': (attribute.substr(1, 1) === '1'),
+      'paper': parseInt(attribute.substr(2, 3), 2),
+      'ink': parseInt(attribute.substr(5, 3), 2)
+    };
+  }
+  
+  function parse_screen(raw_screen) {
+    var output = {'pixels': [], 'attributes': []}, x;
+    raw_screen.pixels.each_pair(function (y, line) {
+      output.pixels[y] = '';
+      for (x = 0; x < line.length; x += 2) {
+        output.pixels[y] += line.substr(x, 2).hex_to_binary();
+      }
+    });
+    raw_screen.attributes.each_pair(function (y, attribute) {
+      output.attributes[y] = [];
+      for (x = 0; x < attribute.length; x += 2) {
+        output.attributes[y][x / 2] = get_attribute(attribute.substr(x, 2).hex_to_binary());
+      }
+    });
+    return output;
+  }
+  
+  function render_screen(raw_screen) {
+    var parsed_screen = parse_screen(raw_screen), canvas, ctx, image_data, x, y, attrib_y, attribute, ink, paper;
+    canvas = create_canvas(parsed_screen.pixels[0].length, parsed_screen.pixels.length);
+    ctx = canvas.getContext('2d');
+    image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    for (y = 0; y < canvas.height; y += 1) {
+      attrib_y = Math.floor(y / 8);
+      for (x = 0; x < canvas.width; x += 1) {
+        attribute = parsed_screen.attributes[attrib_y][Math.floor(x / 8)];
+        if (attribute.bright) {
+          ink = attribute.ink + 8;
+          paper = attribute.paper + 8;
+        } else {
+          ink = attribute.ink;
+          paper = attribute.paper;
+        }
+        image_data = insert_rgb(image_data, x, y, (parsed_screen.pixels[y].substr(x, 1) === '1') ? palette[ink] : palette[paper]);
+      }
+    }
+    ctx.putImageData(image_data, 0, 0);
+    return scale(canvas, 2);
   }
   
   return {
     "init": function (success, failure) {
       http_get('chaos.json', function (response_text) {
-        init(response_text);
+        json = JSON.parse(response_text);
+        palette = expand_palette(json.palette);
         success(json);
       }, function (status) {
         failure(status);
@@ -264,6 +306,17 @@ var Storage = (function () {
     
     "initial_positions": function (number_of_wizards) {
       return json.initial_positions[number_of_wizards - 2];
+    },
+    
+    "loading_screen": function () {
+      if (json.loading_screen !== null) {
+        if (loading_screen === undefined) {
+          loading_screen = render_screen(json.loading_screen);
+        }
+        return loading_screen;
+      } else {
+        return undefined;
+      }
     }
   };
 }());

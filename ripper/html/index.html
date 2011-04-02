@@ -42,13 +42,25 @@ function draw_border(ink, paper) {
   $('output').getContext('2d').drawImage(Storage.border(512, 352, ink, (paper === undefined) ? 0 : paper), 0, 0);
 }
 
+function cls(x, y) {
+  if ((x !== undefined) && (y !== undefined)) {
+    $('output').getContext('2d').clearRect(16 + x * 32, 16 + y * 32, 32, 32);
+  } else {
+    $('output').getContext('2d').clearRect(0, 0, $('output').width, $('output').height);
+  }
+}
+
 Storage.init(function (obj) {
-  draw_text(Storage.interface_message(0), 14);
-  draw_border(9, 0);
-  draw_sprite(Storage.object(2).anim[3], 4, 5);
-  draw_sprite(Storage.cursor('box', 13), 0, 0);
-  draw_sprite(Storage.wizard(0, 10), 1, 1);
-  draw_sprite(Storage.weapon("magic_sword", 15)[0], 9, 4);
+  $('output').getContext('2d').drawImage(Storage.loading_screen(), 0, 0);
+  setTimeout(function () {
+    cls();
+    draw_text(Storage.interface_message(0), 14);
+    draw_border(9, 0);
+    draw_sprite(Storage.object(2).anim[3], 4, 5);
+    draw_sprite(Storage.cursor('box', 13), 0, 0);
+    draw_sprite(Storage.wizard(0, 10), 1, 1);
+    draw_sprite(Storage.weapon("magic_sword", 15)[0], 9, 4);
+  }, 1500);
 }, function (status) {
   alert('Could not obtain resource file: (' + status + ')');
 });

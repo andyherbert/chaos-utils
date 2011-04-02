@@ -70,6 +70,15 @@ Object.prototype.clone = function () {
   return obj;
 };
 
+Object.prototype.hex_to_binary = function () {
+  var output = '';
+  output = parseInt(this, 16).toString(2);
+  while (output.length < 8) {
+    output = '0' + output;
+  }
+  return output;
+};
+
 function create_canvas(width, height) {
   var canvas = document.createElement('CANVAS');
   canvas.setAttribute('WIDTH', width);
