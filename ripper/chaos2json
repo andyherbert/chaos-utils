@@ -3,4 +3,4 @@ require 'rubygems'
 require 'json'
 require 'lib/chaos'
 
-puts JSON.pretty_generate(Chaos.new('chaos.sna').dump)
+puts JSON.pretty_generate(Chaos.new('chaos.sna', 'chaos.scr').dump)

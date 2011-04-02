@@ -26,6 +26,9 @@ json.
 
     Usage: chaos2json (requires chaos.sna in working directory)
 
+If `chaos.scr` containing the loading screen is also located in the working
+directory, then it will be appended to the json object.
+
 # Contact
 
 andy.herbert@gmail.com

@@ -1,11 +1,7 @@
 class Chaos
-  def initialize(filename)
-    @memory = Array.new(16384 - 27, 0x00)
-    File.open(filename, 'r') do |file|
-      while !file.eof? do
-        @memory << file.readbyte
-      end
-    end
+  def initialize(sna_filename, scr_filename)
+    @memory = read_file(sna_filename, Array.new(16384 - 27, 0x00)) if File.exists? sna_filename
+    @screen = read_file(scr_filename) if File.exists? scr_filename
   end
   
   def palette
@@ -196,11 +192,44 @@ class Chaos
       :spells => spells,
       :constants => constants,
       :initial_positions => initial_positions,
-      :border => border
+      :border => border,
+      :loading_screen => @screen ? scr_dump : nil
     }
   end
   
   private
+  
+  def scr_dump
+    output = {:screen => Array.new, :attributes => Array.new}
+    3.times do |i|
+      8.times do |k|
+        8.times do |j|
+          offset = (i * 64 + j * 8 + k) * 32
+          output[:screen][output[:screen].length] = String.new;
+          32.times do |x|
+            output[:screen].last << @screen[offset + x].chr.unpack('H2').first
+          end
+        end
+      end
+    end
+    24.times do |i|
+      index = 6144 + i * 32
+      output[:attributes][i] = String.new
+      32.times do |x|
+        output[:attributes].last << @screen[index + x].chr.unpack('H2').first
+      end
+    end
+    output
+  end
+  
+  def read_file(filename, output = Array.new)
+    File.open(filename, 'r') do |file|
+      while !file.eof? do
+        output << file.readbyte
+      end
+    end
+    output
+  end
   
   def address(location)
     (@memory[location + 1] << 8) + @memory[location]
