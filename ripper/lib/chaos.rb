@@ -312,7 +312,7 @@ class Chaos
       :undead => id > 27 && id < 34,
       :transparent => id == 29 || id == 31 || id == 35,
       :subvertable => id < @memory[0x857B],
-      :shelter =>  id  > 35 && id < 41
+      :shelter =>  id  > 35 && id < 40
     }
   end
 end
