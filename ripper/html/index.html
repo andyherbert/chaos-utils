@@ -7,15 +7,11 @@
   <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhUlEQVQ4EZ2SgQrAIAhEdez/f9klTLnsZqNAsu7uVWMqIjbqeFzHyTfYAsxMvLrRArpgaDqa5YjdqRlWleUGLKzD6IUj1gnA94aIAe/ZfgKYWAEMkoAw/wGhZwEECGf2XUKfAEgOw26eADsz0ymAXZntOfBG6pcJPbWnf2I1dWv6hC5QtQfK4CEgAQxPAAAAAABJRU5ErkJggg==" />
   <script src="lib.js" type="text/javascript" charset="utf-8"></script>
   <script src="Storage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="Board.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css" media="screen">
   body {
     background-color: black;
     margin: 0;
-  }
-  
-  #canvas_frame, #output {
-    width: 512px;
-    height: 384px;
   }
   
   #canvas_frame {
@@ -23,47 +19,34 @@
     padding: 16px;
     border: 1px solid #333;
   }
+  
+  #game_board, #canvas_frame {
+    width: 512px;
+    height: 384px;
+  }
   </style>
 </head>
 <body>
-  <div id='canvas_frame'>
-    <canvas id='output' width="512" height="384"></canvas>
-  </div>
+  <div id='canvas_frame'><canvas id='game_board' width='512' height='384'></canvas></div>
   <script type="text/javascript">
-function draw_sprite(sprite, x, y) {
-  $('output').getContext('2d').drawImage(sprite, 16 + x * 32, 16 + y * 32);
+function start() {
+  var x, y;
+  Storage.init(2, function (obj) {
+    Board.init($('game_board'), function () {
+      Board.draw_arena();
+      Board.text('Animation test', 13);
+      for (x = 0; x < 15; x += 1) {
+        for (y = 0; y < 10; y += 1) {
+          Board.add_object(Math.round(Math.random() * 38) + 2, x, y);
+        }
+      }
+    });
+  }, function (status) {
+    alert('Could not obtain resource file: (' + status + ')');
+  });
 }
 
-function draw_text(text, ink) {
-  $('output').getContext('2d').drawImage(Storage.text(text, (ink === undefined) ? 15 : ink, 0), 0, 352);
-}
-
-function draw_border(ink, paper) {
-  $('output').getContext('2d').drawImage(Storage.border(512, 352, ink, (paper === undefined) ? 0 : paper), 0, 0);
-}
-
-function cls(x, y) {
-  if ((x !== undefined) && (y !== undefined)) {
-    $('output').getContext('2d').clearRect(16 + x * 32, 16 + y * 32, 32, 32);
-  } else {
-    $('output').getContext('2d').clearRect(0, 0, $('output').width, $('output').height);
-  }
-}
-
-Storage.init(function (obj) {
-  $('output').getContext('2d').drawImage(Storage.loading_screen(), 0, 0);
-  setTimeout(function () {
-    cls();
-    draw_text(Storage.interface_message(0), 14);
-    draw_border(9, 0);
-    draw_sprite(Storage.object(2).anim[3], 4, 5);
-    draw_sprite(Storage.cursor('box', 13), 0, 0);
-    draw_sprite(Storage.wizard(0, 10), 1, 1);
-    draw_sprite(Storage.weapon("magic_sword", 15)[0], 9, 4);
-  }, 3000);
-}, function (status) {
-  alert('Could not obtain resource file: (' + status + ')');
-});
+start();
   </script>
 </body>
 </html>

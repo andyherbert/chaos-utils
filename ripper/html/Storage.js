@@ -1,7 +1,7 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
 /*global $: true, create_canvas: true, http_get: true */
 var Storage = (function () {
-  var json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
+  var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
   
   function expand_palette(palette) {
     var output = [];
@@ -70,7 +70,7 @@ var Storage = (function () {
       });
     });
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, 2);
+    return scale(canvas, scale_factor);
   }
   
   function render_object(anim, ink, paper) {
@@ -173,12 +173,13 @@ var Storage = (function () {
       }
     }
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, 2);
+    return scale(canvas, scale_factor);
   }
   
   return {
-    "init": function (success, failure) {
+    "init": function (factor, success, failure) {
       http_get('chaos.json', function (response_text) {
+        scale_factor = factor;
         json = JSON.parse(response_text);
         palette = expand_palette(json.palette);
         success(json);
@@ -187,13 +188,22 @@ var Storage = (function () {
       });
     },
     
-    "object": function (object_id) {
+    "scale_factor": function () {
+      return scale_factor;
+    },
+    
+    "new_object": function (object_id) {
+      var output = json.objects[object_id].clone();
       if (objects[object_id] === undefined) {
         objects[object_id] = json.objects[object_id].clone();
         objects[object_id].anim = render_object(json.objects[object_id].anim);
-        objects[object_id].corpse = render_sprite(json.objects[object_id].corpse.bytes, json.objects[object_id].corpse.ink, json.objects[object_id].corpse.paper);
+        if (objects[object_id].corpse) {
+          objects[object_id].corpse = render_sprite(json.objects[object_id].corpse.bytes, json.objects[object_id].corpse.ink, json.objects[object_id].corpse.paper);
+        }
       }
-      return objects[object_id];
+      output.anim = objects[object_id].anim;
+      output.corpse = objects[object_id].corpse;
+      return output;
     },
     
     "flash_object": function (object_id) {

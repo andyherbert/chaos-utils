@@ -60,7 +60,7 @@ Object.prototype.clone = function () {
   var i, obj = {};
   for (i in this) {
     if (this.hasOwnProperty(i)) {
-      if (typeof this[i] === 'object') {
+      if (typeof this[i] === 'object' && this[i] !== null) {
         obj[i] = this[i].clone();
       } else {
         obj[i] = this[i];
