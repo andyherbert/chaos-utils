@@ -76,6 +76,14 @@ var ChaosLibrary = (function () {
     return scale(canvas, 2);
   }
   
+  function render_object(anim, ink, paper) {
+    var output = [];
+    anim.each_pair(function (key, frame) {
+      output[output.length] = render_sprite(frame.bytes, ink ? ink : frame.ink, paper ? paper : frame.paper);
+    });
+    return output;
+  }
+  
   function fetch_character(key, ink, paper) {
     if (character_set[ink] === undefined) {
       character_set[ink] = [];
@@ -128,7 +136,7 @@ var ChaosLibrary = (function () {
   }
   
   return {
-    "fetch": function (success, failure) {
+    "init": function (success, failure) {
       http_get('chaos.json', function (response_text) {
         init(response_text);
         success(json);
@@ -140,23 +148,18 @@ var ChaosLibrary = (function () {
     "object": function (object_id) {
       if (objects[object_id] === undefined) {
         objects[object_id] = json.objects[object_id].clone();
-        objects[object_id].anim.each_pair(function (key, frame) {
-          objects[object_id].anim[key] = render_sprite(frame.bytes, frame.ink, frame.paper);
-        });
+        objects[object_id].anim = render_object(json.objects[object_id].anim);
         objects[object_id].corpse = render_sprite(json.objects[object_id].corpse.bytes, json.objects[object_id].corpse.ink, json.objects[object_id].corpse.paper);
       }
       return objects[object_id];
     },
     
-    "rainbow_object": function (object_id) {
+    "flash_object": function (object_id) {
       var ink;
       if (rainbow_object[object_id] === undefined) {
         rainbow_object[object_id] = [];
         for (ink = 0; ink < 7; ink += 1) {
-          rainbow_object[object_id][ink] = [];
-          json.objects[object_id].anim.each_pair(function (key, frame) {
-            rainbow_object[object_id][ink][key] = render_sprite(frame.bytes, 15 - ink);
-          });
+          rainbow_object[object_id][ink] = render_object(json.objects[object_id].anim, 15 - ink);
         }
       }
       return rainbow_object[object_id];
@@ -213,7 +216,7 @@ var ChaosLibrary = (function () {
       return fetch_wizard(wizard_index, ink);
     },
     
-    "rainbow_wizard": function (wizard_index) {
+    "flash_wizard": function (wizard_index) {
       var ink;
       if (rainbow_wizard[wizard_index] === undefined) {
         rainbow_wizard[wizard_index] = [];
@@ -228,7 +231,7 @@ var ChaosLibrary = (function () {
       return fetch_weapon(name, ink);
     },
     
-    "rainbow_weapon": function (name) {
+    "flash_weapon": function (name) {
       var ink;
       if (rainbow_weapon[name] === undefined) {
         rainbow_weapon[name] = [];
@@ -239,20 +242,24 @@ var ChaosLibrary = (function () {
       return rainbow_weapon[name];
     },
     
-    "spells": function () {
-      return json.spells;
+    "spell": function (index) {
+      return json.spells[index];
     },
     
-    "interface_messages": function () {
-      return json.messages['interface'];
+    "number_of_spells": function () {
+      return json.spells.length;
     },
     
-    "in_game_messages": function () {
-      return json.messages.in_game;
+    "interface_message": function (index) {
+      return json.messages['interface'][index];
     },
     
-    "constants": function () {
-      return json.constants;
+    "in_game_message": function (index) {
+      return json.messages.in_game[index];
+    },
+    
+    "constant": function (key) {
+      return json.constants[key];
     },
     
     "initial_positions": function (number_of_wizards) {
