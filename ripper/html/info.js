@@ -32,7 +32,7 @@ var Info = (function () {
     },
     
     'show_cell': function (board_slice) {
-      var new_object = (board_slice[0] || board_slice[1] || board_slice[2] || board_slice[3]);
+      var new_object = (board_slice[3] || board_slice[2] || board_slice[1] || board_slice[0]);
       if (new_object) {
         if (new_object !== current_object) {
           current_object = new_object;

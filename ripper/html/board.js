@@ -158,6 +158,7 @@ var Board = (function () {
     update_cell(x, y);
     if ((x === info_x) && (y === info_y)) {
       draw_info(x, y);
+      Info.show_cell(get_slice(x, y));
     }
   }
   
@@ -166,6 +167,7 @@ var Board = (function () {
     update_cell(x, y);
     if ((x === info_x) && (y === info_y)) {
       draw_info(x, y);
+      Info.show_cell(get_slice(x, y));
     }
   }
   
