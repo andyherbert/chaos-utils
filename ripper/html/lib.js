@@ -94,3 +94,33 @@ function create_canvas(width, height) {
   canvas.setAttribute('HEIGHT', height);
   return canvas;
 }
+
+function tile_horizontal(array_of_items) {
+  var width = 0, height = 0, x = 0, output, ctx;
+  array_of_items.each(function (canvas) {
+    width += canvas.width;
+    height = Math.max(height, canvas.height);
+  });
+  output = create_canvas(width, height);
+  ctx = output.getContext('2d');
+  array_of_items.each(function (canvas) {
+    ctx.drawImage(canvas, x, 0);
+    x += canvas.width;
+  });
+  return output;
+}
+
+function tile_vertical(array_of_items) {
+  var width = 0, height = 0, y = 0, output, ctx;
+  array_of_items.each(function (canvas) {
+    width = Math.max(width, canvas.width);
+    height += canvas.height;
+  });
+  output = create_canvas(width, height);
+  ctx = output.getContext('2d');
+  array_of_items.each(function (canvas) {
+    ctx.drawImage(canvas, 0, y);
+    y += canvas.height;
+  });
+  return output;
+}

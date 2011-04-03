@@ -1,5 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global COLOURS: true, $: true, create_canvas: true, http_get: true, Storage: true */
+/*global COLOURS: true, $: true, create_canvas: true, tile_horizontal: true, http_get: true, Info: true, Storage: true */
 
 var Board = (function () {
   var info_x, info_y, scale_factor, canvas, ctx, anim_timer, arena = [[], [], [], []];
@@ -25,14 +25,6 @@ var Board = (function () {
     if (image !== undefined) {
       ctx.drawImage(image, x, y);
     }
-  }
-  
-  function draw_compound_text(images) {
-    var x = 0;
-    images.each(function (image) {
-      draw_text(image, x);
-      x += image.width;
-    });
   }
   
   function erase(x, y) {
@@ -110,40 +102,6 @@ var Board = (function () {
     });
   }
   
-  function draw_info(x, y) {
-    var text = [], array_index = y * 15 + x;
-    if (arena[3][array_index]) {
-      text[text.length] = Storage.text(arena[3][array_index].name, COLOURS.bright_cyan);
-      if (arena[2][array_index]) {
-        text[text.length] = Storage.text('#', COLOURS.bright_white);
-      } else if (arena[0][array_index]) {
-        text[text.length] = Storage.text('#', COLOURS.bright_purple);
-      }
-      text[text.length] = Storage.text('(' + arena[3][array_index].creator + ')', COLOURS.bright_yellow);
-    } else if (arena[2][array_index]) {
-      text[text.length] = Storage.text(arena[2][array_index].name, COLOURS.bright_cyan);
-      if (arena[1][array_index]) {
-        text[text.length] = Storage.text('#', COLOURS.bright_white);
-      } else if (arena[0][array_index]) {
-        text[text.length] = Storage.text('#', COLOURS.bright_purple);
-      }
-      text[text.length] = Storage.text('(' + arena[2][array_index].creator + ')', COLOURS.bright_yellow);
-    } else if (arena[1][array_index]) {
-      text[text.length] = Storage.text(arena[1][array_index].name, COLOURS.bright_cyan);
-      if (arena[0][array_index]) {
-        text[text.length] = Storage.text('#', COLOURS.bright_purple);
-      }
-    } else if (arena[0][array_index]) {
-      text[text.length] = Storage.text(arena[0][array_index].name + ' ', COLOURS.bright_cyan);
-      text[text.length] = Storage.text(Storage.in_game_message(50), COLOURS.bright_green);
-    }
-    if (text.length > 0) {
-      draw_compound_text(text);
-    } else {
-      draw_text();
-    }
-  }
-  
   function mouse_out(mouse_event) {
     var temp_x = info_x, temp_y = info_y;
     if ((info_x !== undefined) && (info_y !== undefined)) {
@@ -153,14 +111,30 @@ var Board = (function () {
     }
   }
   
+  function get_slice(x, y) {
+    var array_index = y * 15 + x;
+    return [arena[0][array_index], arena[1][array_index], arena[2][array_index], arena[3][array_index]];
+  }
+  
+  function draw_info(x, y) {
+    var short_info = Info.short_info(get_slice(x, y));
+    if (short_info) {
+      draw_text(short_info);
+    } else {
+      draw_text();
+    }
+  }
+  
   function mouse_move(mouse_event) {
-    var size = 16 * scale_factor, x, y, temp_x = info_x, temp_y = info_y;
+    var size = 16 * scale_factor, x, y, array_index, temp_x = info_x, temp_y = info_y;
     x = Math.floor((mouse_event.universal_offsetX() - 8 * scale_factor) / size);
     y = Math.floor((mouse_event.universal_offsetY() - 8 * scale_factor) / size);
     if ((x >= 0) && (x < 15) && (y >= 0) && (y < 10)) {
       if ((x !== info_x) || (y !== info_y)) {
+        array_index = y * 15 + x;
         info_x = x;
         info_y = y;
+        Info.show_cell(get_slice(x, y));
         if ((temp_x !== undefined) && (temp_y !== undefined)) {
           update_cell(temp_x, temp_y);
         }
@@ -171,6 +145,7 @@ var Board = (function () {
       info_x = undefined;
       info_y = undefined;
       update_cell(temp_x, temp_y);
+      Info.wipe();
     }
   }
   
@@ -202,9 +177,6 @@ var Board = (function () {
       canvas.addEventListener('mouseout', mouse_out, true);
       ctx = canvas.getContext('2d');
       ctx.drawImage(Storage.loading_screen(), 0, 0);
-      setTimeout(function () {
-        callback();
-      }, 0);
     },
     
     'add_corpse': function (x, y, object) {
@@ -283,9 +255,9 @@ var Board = (function () {
       range = Storage.text(String(range), COLOURS.bright_white);
       draw_text(wizard_name);
       setTimeout(function () {
-        draw_compound_text([wizard_name, spell_name]);
+        draw_text(tile_horizontal([wizard_name, spell_name]));
         setTimeout(function () {
-          draw_compound_text([wizard_name, spell_name, range]);
+          draw_text(tile_horizontal([wizard_name, spell_name, range]));
           setTimeout(function () {
             callback();
           }, 300);

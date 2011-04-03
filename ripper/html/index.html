@@ -8,6 +8,7 @@
   <script src="globals.js" type="text/javascript" charset="utf-8"></script>
   <script src="lib.js" type="text/javascript" charset="utf-8"></script>
   <script src="storage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="info.js" type="text/javascript" charset="utf-8"></script>
   <script src="board.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css" media="screen">
   body {
@@ -16,7 +17,7 @@
   }
   
   #centered_container {
-    width: 1056px;
+    width: 1032px;
     margin: 16px auto;
   }
   
@@ -52,23 +53,18 @@
 function start() {
   Storage.init(2, function (obj) {
     var king_cobra = Storage.new_object(2, 'andyh'), golden_dragon = Storage.new_object(25, 'andyh');
-    Board.init($('board'), function () {
-      Board.draw_arena();
-      // Board.cast_text('andyh', 'KING COBRA', 20, function () {
-      //   
-      // });
-      Board.add_object(0, 0, king_cobra);
-      Board.add_object(1, 1, golden_dragon);
-      Board.draw_info(1, 1);
-      setTimeout(function () {
-        Board.attack_effect(1, 1, function () {
-          Board.kill_object(1, 1);
-          Board.move_object(0, 0, 1, 1);
-          Board.start_animation();
-          // Board.draw_info(1, 1);
-        }, 1000);
-      }, 2000);
-    });
+    Board.init($('board'));
+    Info.init($('info'));
+    Board.draw_arena();
+    Board.add_object(0, 0, king_cobra);
+    Board.add_object(1, 1, golden_dragon);
+    setTimeout(function () {
+      Board.attack_effect(1, 1, function () {
+        Board.kill_object(1, 1);
+        Board.move_object(0, 0, 1, 1);
+        Board.start_animation();
+      }, 1000);
+    }, 2000);
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');
   });
