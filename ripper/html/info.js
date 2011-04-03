@@ -4,8 +4,16 @@ var Info = (function () {
   var canvas, ctx, scale_factor, current_object;
   
   function stats(object) {
-    var name, alignment, attributes = [], combat, ranged_and_range, defence, movement_allowance, manoevre, magic_resistance, wizard_stats;
+    var name, alignment, attributes = [], combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance;
     name = Storage.text(object.name + ' ', COLOURS.bright_yellow);
+    if (object.chaos_law_value !== 0) {
+      if (object.chaos_law_value > 0) {
+        alignment = Storage.text(Storage.in_game_message(71) + ' ' + object.chaos_law_value + ')', COLOURS.bright_cyan);
+      } else if (object.chaos_law_value < 0) {
+        alignment = Storage.text(Storage.in_game_message(70) + ' ' + Math.abs(object.chaos_law_value) + ')', COLOURS.bright_purple);
+      }
+      name = tile_horizontal([name, alignment]);
+    }
     if (object.mount) {
       attributes[attributes.length] = Storage.in_game_message(68);
     }
@@ -16,12 +24,13 @@ var Info = (function () {
       attributes[attributes.length] = Storage.in_game_message(69);
     }
     attributes = Storage.text((attributes.length > 0) ? attributes.join(',') : ' ', COLOURS.bright_green);
-    combat = tile_horizontal([Storage.text(Storage.in_game_message(72), COLOURS.bright_cyan), Storage.text(String(object.combat), COLOURS.bright_white)])
-    ranged_and_range = tile_horizontal([Storage.text(Storage.in_game_message(73), COLOURS.bright_cyan), Storage.text(String(object.ranged_combat), COLOURS.bright_white), Storage.text(' ' + Storage.in_game_message(74), COLOURS.bright_cyan), Storage.text(String(object.range), COLOURS.bright_white)])
-    defence = tile_horizontal([Storage.text(Storage.in_game_message(75), COLOURS.bright_cyan), Storage.text(String(object.defence), COLOURS.bright_white)])
-    movement_allowance = tile_horizontal([Storage.text(Storage.in_game_message(76), COLOURS.bright_cyan), Storage.text(String(object.movement_allowance), COLOURS.bright_white)])
-    magic_resistance = tile_horizontal([Storage.text(Storage.in_game_message(78), COLOURS.bright_cyan), Storage.text(String(object.magic_resistance), COLOURS.bright_white)])
-    return tile_vertical([name, attributes, combat, ranged_and_range, defence, movement_allowance, magic_resistance]);
+    combat = tile_horizontal([Storage.text(Storage.in_game_message(72), COLOURS.bright_cyan), Storage.text(String(object.combat), COLOURS.bright_white)]);
+    ranged_and_range = tile_horizontal([Storage.text(Storage.in_game_message(73), COLOURS.bright_cyan), Storage.text(String(object.ranged_combat), COLOURS.bright_white), Storage.text(' ' + Storage.in_game_message(74), COLOURS.bright_cyan), Storage.text(String(object.range), COLOURS.bright_white)]);
+    defence = tile_horizontal([Storage.text(Storage.in_game_message(75), COLOURS.bright_cyan), Storage.text(String(object.defence), COLOURS.bright_white)]);
+    movement_allowance = tile_horizontal([Storage.text(Storage.in_game_message(76), COLOURS.bright_cyan), Storage.text(String(object.movement_allowance), COLOURS.bright_white)]);
+    manoeuvre_rating = tile_horizontal([Storage.text(Storage.in_game_message(77), COLOURS.bright_cyan), Storage.text(String(object.manoeuvre_rating), COLOURS.bright_white)]);
+    magic_resistance = tile_horizontal([Storage.text(Storage.in_game_message(78), COLOURS.bright_cyan), Storage.text(String(object.magic_resistance), COLOURS.bright_white)]);
+    return tile_vertical([name, attributes, combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance]);
   }
   
   return {
