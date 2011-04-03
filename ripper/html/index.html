@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Chaos</title>
   <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhUlEQVQ4EZ2SgQrAIAhEdez/f9klTLnsZqNAsu7uVWMqIjbqeFzHyTfYAsxMvLrRArpgaDqa5YjdqRlWleUGLKzD6IUj1gnA94aIAe/ZfgKYWAEMkoAw/wGhZwEECGf2XUKfAEgOw26eADsz0ymAXZntOfBG6pcJPbWnf2I1dWv6hC5QtQfK4CEgAQxPAAAAAABJRU5ErkJggg==" />
+  <script src="globals.js" type="text/javascript" charset="utf-8"></script>
   <script src="lib.js" type="text/javascript" charset="utf-8"></script>
   <script src="Storage.js" type="text/javascript" charset="utf-8"></script>
   <script src="Board.js" type="text/javascript" charset="utf-8"></script>
@@ -14,32 +15,59 @@
     margin: 0;
   }
   
-  #canvas_frame {
-    margin: 8px auto;
-    padding: 16px;
-    border: 1px solid #333;
+  #centered_container {
+    width: 1056px;
+    margin: 16px auto;
   }
   
-  #game_board, #canvas_frame {
+  #left_display, #right_display {
+    width: 512px;
+  }
+  
+  #left_display {
+    float: left;
+  }
+  
+  #right_display {
+    float: right;
+    clear: right;
+  }
+  
+  #board, #info {
     width: 512px;
     height: 384px;
   }
   </style>
 </head>
 <body>
-  <div id='canvas_frame'><canvas id='game_board' width='512' height='384'></canvas></div>
+  <div id='centered_container'>
+    <div id='left_display'>
+      <canvas id='board' width='512' height='384'></canvas>
+    </div>
+    <div id='right_display'>
+      <canvas id='info' width='512' height='384'></canvas>
+    </div>
+  </div>
   <script type="text/javascript">
 function start() {
-  var x, y;
   Storage.init(2, function (obj) {
-    Board.init($('game_board'), function () {
+    var king_cobra = Storage.new_object(2, 'andyh'), golden_dragon = Storage.new_object(25, 'andyh');
+    Board.init($('board'), function () {
       Board.draw_arena();
-      Board.text('Animation test', 13);
-      for (x = 0; x < 15; x += 1) {
-        for (y = 0; y < 10; y += 1) {
-          Board.add_object(Math.round(Math.random() * 38) + 2, x, y);
-        }
-      }
+      // Board.cast_text('andyh', 'KING COBRA', 20, function () {
+      //   
+      // });
+      Board.add_object(0, 0, king_cobra);
+      Board.add_object(1, 1, golden_dragon);
+      Board.draw_info(1, 1);
+      setTimeout(function () {
+        Board.attack_effect(1, 1, function () {
+          Board.kill_object(1, 1);
+          Board.move_object(0, 0, 1, 1);
+          Board.start_animation();
+          // Board.draw_info(1, 1);
+        }, 1000);
+      }, 2000);
     });
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');

@@ -1,11 +1,13 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
+var firefox = (navigator.userAgent.indexOf('Firefox') !== -1);
+
 function $(element_id) {
   return document.getElementById(element_id);
 }
 
 function http_get(url, success, failure) {
   var req = new XMLHttpRequest();
-  req.open("GET", url, true);
+  req.open('GET', url, true);
   req.onreadystatechange = function () {
     if (req.readyState === 4) {
       if (req.status === 200 || req.status === 0) {
@@ -76,6 +78,14 @@ Object.prototype.hex_to_binary = function () {
     output = '0' + output;
   }
   return output;
+};
+
+Object.prototype.universal_offsetX = function () {
+  return firefox ? (this.pageX - this.target.offsetLeft) : this.offsetX;
+};
+
+Object.prototype.universal_offsetY = function () {
+  return firefox ? (this.pageY - this.target.offsetTop) : this.offsetY;
 };
 
 function create_canvas(width, height) {

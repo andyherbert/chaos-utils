@@ -1,12 +1,12 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
 /*global $: true, create_canvas: true, http_get: true */
 var Storage = (function () {
-  var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
+  var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], effect = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
   
   function expand_palette(palette) {
     var output = [];
-    palette.each(function (colour) {
-      output[output.length] = [parseInt(colour.substr(0, 2), 16), parseInt(colour.substr(2, 2), 16), parseInt(colour.substr(4, 2), 16)];
+    palette.each_pair(function (num, colour) {
+      output[num] = [parseInt(colour.substr(0, 2), 16), parseInt(colour.substr(2, 2), 16), parseInt(colour.substr(4, 2), 16)];
     });
     return output;
   }
@@ -75,8 +75,8 @@ var Storage = (function () {
   
   function render_object(anim, ink, paper) {
     var output = [];
-    anim.each_pair(function (key, frame) {
-      output[output.length] = render_sprite(frame.bytes, (ink === undefined) ? frame.ink : ink, (paper === undefined) ? frame.paper : paper);
+    anim.each_pair(function (num, frame) {
+      output[num] = render_sprite(frame.bytes, (ink === undefined) ? frame.ink : ink, (paper === undefined) ? frame.paper : paper);
     });
     return output;
   }
@@ -120,8 +120,8 @@ var Storage = (function () {
     }
     if (weapons[ink][key] === undefined) {
       weapons[ink][key] = [];
-      json.wizards.weapons[key].each(function (frame) {
-        weapons[ink][key][weapons[ink][key].length] = render_sprite(frame, ink);
+      json.wizards.weapons[key].each_pair(function (num, frame) {
+        weapons[ink][key][num] = render_sprite(frame, ink);
       });
     }
     return weapons[ink][key];
@@ -192,7 +192,7 @@ var Storage = (function () {
       return scale_factor;
     },
     
-    "new_object": function (object_id) {
+    "new_object": function (object_id, creator) {
       var output = json.objects[object_id].clone();
       if (objects[object_id] === undefined) {
         objects[object_id] = json.objects[object_id].clone();
@@ -203,6 +203,7 @@ var Storage = (function () {
       }
       output.anim = objects[object_id].anim;
       output.corpse = objects[object_id].corpse;
+      output.creator = creator;
       return output;
     },
     
@@ -266,6 +267,19 @@ var Storage = (function () {
     
     "wizard": function (wizard_index, ink) {
       return fetch_wizard(wizard_index, ink);
+    },
+    
+    "effect": function (name, ink) {
+      if (effect[ink] === undefined) {
+        effect[ink] = {};
+      }
+      if (effect[ink][name] === undefined) {
+        effect[ink][name] = [];
+        json.effects[name].each_pair(function (num, bytes) {
+          effect[ink][name][num] = render_sprite(bytes, ink);
+        });
+      }
+      return effect[ink][name];
     },
     
     "flash_wizard": function (wizard_index) {

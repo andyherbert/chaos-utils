@@ -104,7 +104,6 @@ class Chaos
   
   def effects
     output = {
-      :timing => 1,
       :'exploding_circle' => [],
       :'twirl' => [],
       :'explosion' => [],
@@ -186,6 +185,7 @@ class Chaos
       :palette => palette,
       :objects => objects,
       :wizards => wizards,
+      :effects => effects,
       :character_set => character_set,
       :cursors => cursors,
       :messages => messages,
