@@ -1,8 +1,8 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global COLOURS: true, $: true, create_canvas: true, tile_horizontal: true, http_get: true, Info: true, Storage: true */
+/*global World: true, RGB: true, $: true, create_canvas: true, tile_horizontal: true, http_get: true, Info: true, Storage: true, line: true */
 
 var Board = (function () {
-  var info_x, info_y, scale_factor, canvas, ctx, anim_timer, arena = [[], [], [], []];
+  var info_x, info_y, hidden_cursor, scale_factor, canvas, ctx;
   
   function draw_image(image, x, y) {
     var size = 16 * scale_factor;
@@ -28,76 +28,66 @@ var Board = (function () {
   }
   
   function erase(x, y) {
+    ctx.fillStyle = 'black';
     if ((x !== undefined) && (y !== undefined)) {
-      ctx.clearRect((8 + x * 16) * scale_factor, (8 + y * 16) * scale_factor, 16 * scale_factor, 16 * scale_factor);
+      ctx.fillRect((8 + x * 16) * scale_factor, (8 + y * 16) * scale_factor, 16 * scale_factor, 16 * scale_factor);
     } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
   }
   
   function update_cell(x, y) {
-    var array_index = y * 15 + x, object;
     erase(x, y);
-    arena.each_pair(function (arena_index, objects) {
-      object = objects[array_index];
-      if (object) {
-        if (arena_index === '0') {
+    World.get_slice(x, y).each_pair(function (layer_name, object) {
+      if (object !== undefined) {
+        if (layer_name === 'corpse') {
           draw_image(object.corpse, object.x, object.y);
         } else {
           draw_image(object.anim[object.frame_index], object.x, object.y);
         }
       }
     });
-    if (info_x === x && info_y === y) {
-      draw_cursor('box', x, y, COLOURS.bright_cyan);
+    if ((info_x === x) && (info_y === y) && !hidden_cursor) {
+      draw_cursor('box', x, y, RGB.b_cyan);
     }
   }
   
-  function draw_border(ink, paper) {
-    ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, ink, (paper === undefined) ? 0 : paper), 0, 0);
-  }
-  
-  function do_tic() {
-    arena.each_pair(function (arena_index, objects) {
-      objects.each(function (object) {
-        if (arena_index !== '0' && object) {
-          object.tic_count += 1;
-          if (object.tic_count === object.anim_timing) {
-            object.tic_count = 0;
-            object.frame_index = (object.frame_index === 3) ? 0 : (object.frame_index + 1);
-            update_cell(object.x, object.y);
-          }
-        }
-      });
-    });
-  }
-  
-  function do_animation(bool) {
-    if (bool) {
-      anim_timer = setInterval(do_tic, 20);
-    } else {
-      clearInterval(anim_timer);
-    }
-  }
-  
-  function do_effect(frames, x, y, repeat, callback, frame_counter) {
+  function do_effect_tic(frames, x, y, repeat, callback, frame_counter) {
     if (frame_counter === undefined) {
       frame_counter = 0;
     }
     if ((frames.length * repeat) !== frame_counter) {
       draw_image(frames[frame_counter % frames.length], x, y);
       setTimeout(function () {
-        do_effect(frames, x, y, repeat, callback, frame_counter + 1);
+        do_effect_tic(frames, x, y, repeat, callback, frame_counter + 1);
       }, 75);
     } else {
       callback();
     }
   }
   
+  function set_hidden_cursor(bool) {
+    hidden_cursor = bool;
+    if ((info_x !== undefined) && (info_y !== undefined)) {
+      update_cell(info_x, info_y);
+    }
+  }
+  
+  function freeze() {
+    World.freeze();
+    set_hidden_cursor(true);
+  }
+  
+  function set_interactive() {
+    World.unfreeze();
+    set_hidden_cursor(false);
+  }
+  
   function start_effect(frames, x, y, callback, repeat) {
-    do_animation(false);
-    do_effect(frames, x, y, repeat, function () {
+    freeze();
+    do_effect_tic(frames, x, y, repeat, function () {
       update_cell(x, y);
+      set_interactive();
       callback();
     });
   }
@@ -111,17 +101,10 @@ var Board = (function () {
     }
   }
   
-  function get_slice(x, y) {
-    var array_index = y * 15 + x;
-    return [arena[0][array_index], arena[1][array_index], arena[2][array_index], arena[3][array_index]];
-  }
-  
   function draw_info(x, y) {
-    var short_info = Info.short_info(get_slice(x, y));
-    if (short_info) {
-      draw_text(short_info);
-    } else {
-      draw_text();
+    var text = Info.get_info(x, y);
+    if (text) {
+      draw_text(text);
     }
   }
   
@@ -134,12 +117,13 @@ var Board = (function () {
         array_index = y * 15 + x;
         info_x = x;
         info_y = y;
-        Info.show_cell(get_slice(x, y));
-        if ((temp_x !== undefined) && (temp_y !== undefined)) {
-          update_cell(temp_x, temp_y);
+        if (!hidden_cursor) {
+          draw_info(x, y);
+          update_cell(info_x, info_y);
+          if ((temp_x !== undefined) && (temp_y !== undefined)) {
+            update_cell(temp_x, temp_y);
+          }
         }
-        update_cell(info_x, info_y);
-        draw_info(x, y);
       }
     } else if ((info_x !== undefined) && (info_y !== undefined)) {
       info_x = undefined;
@@ -149,112 +133,98 @@ var Board = (function () {
     }
   }
   
-  function add_object(layer, x, y, object) {
-    object.x = x;
-    object.y = y;
-    object.tic_count = 0;
-    object.frame_index = 0;
-    arena[layer][y * 15 + x] = object;
-    update_cell(x, y);
-    if ((x === info_x) && (y === info_y)) {
-      draw_info(x, y);
-      Info.show_cell(get_slice(x, y));
+  function do_line_effect(beam_image, cleanup_image, length, pixels, step, callback, count) {
+    var x_offset = beam_image.width / 2, y_offset = beam_image.width / 2;
+    if (count === undefined) {
+      count = 0;
+    }
+    if (count < (pixels.length + length)) {
+      if (count % step === 0) {
+        if (count < pixels.length) {
+          ctx.drawImage(beam_image, pixels[count][0] - x_offset, pixels[count][1] - y_offset);
+        }
+        if (count >= length) {
+          ctx.drawImage(cleanup_image, pixels[count - length][0] - x_offset, pixels[count - length][1] - y_offset);
+        }
+      }
+      setTimeout(function () {
+        do_line_effect(beam_image, cleanup_image, length, pixels, step, callback, count + 1);
+      }, 5);
+    } else {
+      callback();
     }
   }
-  
-  function remove_object(layer, x, y) {
-    delete (arena[layer][y * 15 + x]);
-    update_cell(x, y);
-    if ((x === info_x) && (y === info_y)) {
-      draw_info(x, y);
-      Info.show_cell(get_slice(x, y));
-    }
-  }
-  
   return {
     'init': function (element, callback) {
       scale_factor = Storage.scale_factor();
       canvas = element;
+      ctx = canvas.getContext('2d');
       canvas.addEventListener('mousemove', mouse_move, true);
       canvas.addEventListener('mouseout', mouse_out, true);
-      ctx = canvas.getContext('2d');
-      ctx.drawImage(Storage.loading_screen(), 0, 0);
     },
     
-    'add_corpse': function (x, y, object) {
-      add_object(0, x, y, object);
+    'simple_beam': function (sx, sy, dx, dy, callback) {
+      freeze();
+      canvas.save_buffer();
+      do_line_effect(Storage.simple_beam(RGB.b_white), Storage.simple_beam(RGB.black), 20, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, function () {
+        canvas.restore_buffer();
+        set_interactive();
+        callback();
+      });
     },
     
-    'remove_corpse': function (x, y) {
-      remove_object(0, x, y);
+    'spell_beam': function (sx, sy, dx, dy, callback) {
+      freeze();
+      canvas.save_buffer();
+      do_line_effect(Storage.spell_beam(RGB.b_cyan), Storage.spell_beam(RGB.black), 30, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, function () {
+        canvas.restore_buffer();
+        set_interactive();
+        callback();
+      });
     },
     
-    'add_wizard': function (x, y, object) {
-      add_object(1, x, y, object);
-    },
-    
-    'remove_wizard': function (x, y) {
-      remove_object(1, x, y);
-    },
-    
-    'add_object': function (x, y, object) {
-      add_object(2, x, y, object);
-    },
-    
-    'remove_object': function (x, y) {
-      remove_object(2, x, y);
-    },
-    
-    'kill_object': function (x, y) {
-      add_object(0, x, y, arena[2][y * 15 + x]);
-      remove_object(2, x, y);
-    },
-    
-    'move_object': function (sx, sy, dx, dy) {
-      add_object(2, dx, dy, arena[2][sy * 15 + sx]);
-      remove_object(2, sx, sy);
-    },
-    
-    'add_blob': function (x, y, object) {
-      add_object(3, x, y, object);
-    },
-    
-    'remove_blob': function (x, y) {
-      remove_object(3, x, y);
+    'burn_beam': function (sx, sy, dx, dy, callback) {
+      freeze();
+      canvas.save_buffer();
+      do_line_effect(Storage.burn_beam(RGB.b_yellow), Storage.burn_beam(RGB.black), 45, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 3, function () {
+        canvas.restore_buffer();
+        set_interactive();
+        callback();
+      });
     },
     
     'dragon_burn_effect': function (x, y, callback) {
-      start_effect(Storage.effect('dragon_burn', COLOURS.bright_yellow), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('dragon_burn', RGB.b_yellow), x, y, function () { callback(); }, 1);
     },
     
     'attack_effect': function (x, y, callback) {
-      start_effect(Storage.effect('attack', COLOURS.bright_yellow), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('attack', RGB.b_yellow), x, y, function () { callback(); }, 1);
     },
     
     'exploding_circle_effect': function (x, y, callback) {
-      start_effect(Storage.effect('exploding_circle', COLOURS.bright_white), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('exploding_circle', RGB.b_white), x, y, function () { callback(); }, 1);
     },
     
     'twirl_effect': function (x, y, callback) {
-      start_effect(Storage.effect('twirl', COLOURS.bright_cyan), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('twirl', RGB.b_cyan), x, y, function () { callback(); }, 1);
     },
     
     'explosion_effect': function (x, y, callback) {
-      start_effect(Storage.effect('explosion', COLOURS.bright_yellow), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('explosion', RGB.b_yellow), x, y, function () { callback(); }, 1);
     },
     
-    'text': function (text, ink) {
-      draw_text(Storage.text(text, ink));
+    'footer': function (image) {
+      draw_text(image);
     },
     
-    'clear_text': function () {
-      draw_text();
+    'clear_text': function (image) {
+      draw_text(image);
     },
     
     'cast_text': function (wizard_name, spell_name, range, callback) {
-      wizard_name = Storage.text(wizard_name + ' ', COLOURS.bright_yellow);
-      spell_name = Storage.text(spell_name + '  ', COLOURS.bright_green);
-      range = Storage.text(String(range), COLOURS.bright_white);
+      wizard_name = Storage.text(wizard_name + ' ', RGB.b_yellow);
+      spell_name = Storage.text(spell_name + '  ', RGB.b_green);
+      range = Storage.text(String(range), RGB.b_white);
       draw_text(wizard_name);
       setTimeout(function () {
         draw_text(tile_horizontal([wizard_name, spell_name]));
@@ -271,18 +241,14 @@ var Board = (function () {
       draw_info(x, y);
     },
     
-    'stop_animation': function () {
-      do_animation(false);
-    },
-    
-    'start_animation': function () {
-      do_animation(true);
-    },
-    
     'draw_arena': function () {
       erase();
-      draw_border(COLOURS.blue);
-      do_animation(true);
+      ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.blue, 0), 0, 0);
+      set_interactive();
+    },
+    
+    'update_cell': function (x, y) {
+      update_cell(x, y);
     }
   };
 }());

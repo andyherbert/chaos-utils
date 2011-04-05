@@ -8,6 +8,7 @@
   <script src="globals.js" type="text/javascript" charset="utf-8"></script>
   <script src="lib.js" type="text/javascript" charset="utf-8"></script>
   <script src="storage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="world.js" type="text/javascript" charset="utf-8"></script>
   <script src="info.js" type="text/javascript" charset="utf-8"></script>
   <script src="board.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css" media="screen">
@@ -38,6 +39,10 @@
     width: 512px;
     height: 384px;
   }
+  
+  #board {
+    cursor: none;
+  }
   </style>
 </head>
 <body>
@@ -56,14 +61,14 @@ function start() {
     Board.init($('board'));
     Info.init($('info'));
     Board.draw_arena();
-    Board.add_object(0, 0, king_cobra);
-    Board.add_object(1, 1, golden_dragon);
+    World.add_object(4, 3, king_cobra);
+    World.add_object(1, 1, golden_dragon);
     setTimeout(function () {
-      Board.attack_effect(1, 1, function () {
-        Board.kill_object(1, 1);
-        Board.move_object(0, 0, 1, 1);
-        Board.start_animation();
-      }, 1000);
+      Board.burn_beam(1, 1, 4, 3, function () {
+        Board.dragon_burn_effect(4, 3, function () {
+          World.kill_object(4, 3);
+        });
+      });
     }, 2000);
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');

@@ -1,7 +1,7 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global $: true, create_canvas: true, http_get: true */
+/*global $: true, create_canvas: true, http_get: true, scale: true */
 var Storage = (function () {
-  var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], effect = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen;
+  var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], effect = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen, beam = {};
   
   function expand_palette(palette) {
     var output = [];
@@ -23,37 +23,6 @@ var Storage = (function () {
     return output;
   }
   
-  function scale(canvas, factor) {
-    var image_data, dest, dest_ctx, dest_image_data, source_y, source_x, source_index, i, colour = [], x, y, target_index;
-    image_data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
-    dest = create_canvas(canvas.width * factor, canvas.height * factor);
-    dest_ctx = dest.getContext('2d');
-    dest_image_data = dest_ctx.getImageData(0, 0, dest.width, dest.height);
-    for (source_y = 0; source_y < canvas.height; source_y += 1) {
-      for (source_x = 0; source_x < canvas.width; source_x += 1) {
-        source_index = (source_y * canvas.width + source_x) * 4;
-        for (i = 0; i < 4; i += 1) { colour[i] = image_data.data[source_index + i]; }
-        for (y = 0; y < factor; y += 1) {
-          for (x = 0; x < factor; x += 1) {
-            target_index = ((source_y * factor + y) * dest.width + source_x * factor + x) * 4;
-            for (i = 0; i < 4; i += 1) { dest_image_data.data[target_index + i] = colour[i]; }
-          }
-        }
-      }
-    }
-    dest_ctx.putImageData(dest_image_data, 0, 0);
-    return dest;
-  }
-  
-  function insert_rgb(image_data, x, y, rgb) {
-    var i, index = (y * image_data.width + x) * 4;
-    for (i = 0; i < 3; i += 1) {
-      image_data.data[index + i] = rgb[i];
-    }
-    image_data.data[index + 3] = 255;
-    return image_data;
-  }
-  
   function render_sprite(bytes, ink, paper) {
     var bits, canvas, ctx, image_data;
     bits = get_bits(bytes);
@@ -63,9 +32,9 @@ var Storage = (function () {
     bits.each_pair(function (y, line) {
       line.each_char_with_index(function (character, x) {
         if (line.substr(x, 1) === '1') {
-          image_data = insert_rgb(image_data, x, y, palette[ink]);
+          image_data.insert_rgb(x, y, palette[ink]);
         } else if (paper !== undefined) {
-          image_data = insert_rgb(image_data, x, y, palette[paper]);
+          image_data.insert_rgb(x, y, palette[paper]);
         }
       });
     });
@@ -169,15 +138,61 @@ var Storage = (function () {
           ink = attribute.ink;
           paper = attribute.paper;
         }
-        image_data = insert_rgb(image_data, x, y, (parsed_screen.pixels[y].substr(x, 1) === '1') ? palette[ink] : palette[paper]);
+        image_data.insert_rgb(x, y, (parsed_screen.pixels[y].substr(x, 1) === '1') ? palette[ink] : palette[paper]);
       }
     }
     ctx.putImageData(image_data, 0, 0);
     return scale(canvas, scale_factor);
   }
   
+  function create_simple_beam(ink) {
+    var canvas, ctx, image_data;
+    canvas = create_canvas(1, 1);
+    ctx = canvas.getContext('2d');
+    image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    image_data.insert_rgb(0, 0, palette[ink]);
+    ctx.putImageData(image_data, 0, 0);
+    return scale(canvas, scale_factor);
+  }
+  
+  function create_spell_beam(ink) {
+    var canvas, ctx, image_data;
+    canvas = create_canvas(3, 3);
+    ctx = canvas.getContext('2d');
+    image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    image_data.insert_rgb(1, 0, palette[ink]);
+    image_data.insert_rgb(0, 1, palette[ink]);
+    image_data.insert_rgb(1, 1, palette[ink]);
+    image_data.insert_rgb(2, 1, palette[ink]);
+    image_data.insert_rgb(1, 2, palette[ink]);
+    ctx.putImageData(image_data, 0, 0);
+    return scale(canvas, scale_factor);
+  }
+  
+  function create_burn_beam(ink) {
+    var canvas, ctx, image_data;
+    canvas = create_canvas(7, 7);
+    ctx = canvas.getContext('2d');
+    image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    image_data.insert_rgb(3, 2, palette[ink]);
+    image_data.insert_rgb(2, 3, palette[ink]);
+    image_data.insert_rgb(3, 3, palette[ink]);
+    image_data.insert_rgb(4, 3, palette[ink]);
+    image_data.insert_rgb(3, 4, palette[ink]);
+    image_data.insert_rgb(3, 0, palette[ink]);
+    image_data.insert_rgb(1, 1, palette[ink]);
+    image_data.insert_rgb(5, 1, palette[ink]);
+    image_data.insert_rgb(0, 3, palette[ink]);
+    image_data.insert_rgb(6, 3, palette[ink]);
+    image_data.insert_rgb(1, 5, palette[ink]);
+    image_data.insert_rgb(5, 5, palette[ink]);
+    image_data.insert_rgb(3, 6, palette[ink]);
+    ctx.putImageData(image_data, 0, 0);
+    return scale(canvas, scale_factor);
+  }
+  
   return {
-    "init": function (factor, success, failure) {
+    'init': function (factor, success, failure) {
       http_get('chaos.json', function (response_text) {
         scale_factor = factor;
         json = JSON.parse(response_text);
@@ -188,11 +203,11 @@ var Storage = (function () {
       });
     },
     
-    "scale_factor": function () {
+    'scale_factor': function () {
       return scale_factor;
     },
     
-    "new_object": function (object_id, creator) {
+    'new_object': function (object_id, creator) {
       var output = json.objects[object_id].clone();
       if (objects[object_id] === undefined) {
         objects[object_id] = json.objects[object_id].clone();
@@ -207,7 +222,7 @@ var Storage = (function () {
       return output;
     },
     
-    "flash_object": function (object_id) {
+    'flash_object': function (object_id) {
       var ink;
       if (rainbow_object[object_id] === undefined) {
         rainbow_object[object_id] = [];
@@ -218,7 +233,7 @@ var Storage = (function () {
       return rainbow_object[object_id];
     },
     
-    "text": function (text, ink, paper) {
+    'text': function (text, ink, paper) {
       var canvas, ctx, letters = [], width = 0, height = 0;
       text.each_char_with_index(function (character, index) {
         canvas = fetch_character(character, ink, paper);
@@ -236,7 +251,7 @@ var Storage = (function () {
       return canvas;
     },
     
-    "border": function (width, height, ink, paper) {
+    'border': function (width, height, ink, paper) {
       var canvas, ctx, border = fetch_border(ink, paper), size = border[0].width / 2, i;
       canvas = create_canvas(width, height);
       ctx = canvas.getContext('2d');
@@ -255,7 +270,7 @@ var Storage = (function () {
       return canvas;
     },
     
-    "cursor": function (name, ink) {
+    'cursor': function (name, ink) {
       if (cursors[ink] === undefined) {
         cursors[ink] = {};
       }
@@ -265,11 +280,11 @@ var Storage = (function () {
       return cursors[ink][name];
     },
     
-    "wizard": function (wizard_index, ink) {
+    'wizard': function (wizard_index, ink) {
       return fetch_wizard(wizard_index, ink);
     },
     
-    "effect": function (name, ink) {
+    'effect': function (name, ink) {
       if (effect[ink] === undefined) {
         effect[ink] = {};
       }
@@ -282,7 +297,7 @@ var Storage = (function () {
       return effect[ink][name];
     },
     
-    "flash_wizard": function (wizard_index) {
+    'flash_wizard': function (wizard_index) {
       var ink;
       if (rainbow_wizard[wizard_index] === undefined) {
         rainbow_wizard[wizard_index] = [];
@@ -293,11 +308,11 @@ var Storage = (function () {
       return rainbow_wizard[wizard_index];
     },
     
-    "weapon": function (name, ink) {
+    'weapon': function (name, ink) {
       return fetch_weapon(name, ink);
     },
     
-    "flash_weapon": function (name) {
+    'flash_weapon': function (name) {
       var ink;
       if (rainbow_weapon[name] === undefined) {
         rainbow_weapon[name] = [];
@@ -308,31 +323,61 @@ var Storage = (function () {
       return rainbow_weapon[name];
     },
     
-    "spell": function (index) {
+    'spell': function (index) {
       return json.spells[index];
     },
     
-    "number_of_spells": function () {
+    'number_of_spells': function () {
       return json.spells.length;
     },
     
-    "interface_message": function (index) {
+    'interface_message': function (index) {
       return json.messages['interface'][index];
     },
     
-    "in_game_message": function (index) {
+    'in_game_message': function (index) {
       return json.messages.in_game[index];
     },
     
-    "constant": function (key) {
+    'constant': function (key) {
       return json.constants[key];
     },
     
-    "initial_positions": function (number_of_wizards) {
+    'initial_positions': function (number_of_wizards) {
       return json.initial_positions[number_of_wizards - 2];
     },
     
-    "loading_screen": function () {
+    'simple_beam': function (ink) {
+      if (beam.simple === undefined) {
+        beam.simple = [];
+      }
+      if (beam.simple[ink] === undefined) {
+        beam.simple[ink] = create_simple_beam(ink);
+      }
+      return beam.simple[ink];
+    },
+    
+    'spell_beam': function (ink) {
+      if (beam.spell === undefined) {
+        beam.spell = [];
+      }
+      if (beam.spell[ink] === undefined) {
+        beam.spell[ink] = create_spell_beam(ink);
+      }
+      return beam.spell[ink];
+    },
+    
+    'burn_beam': function (ink) {
+      if (beam.burn === undefined) {
+        beam.burn = [];
+      }
+      if (beam.burn[ink] === undefined) {
+        beam.burn[ink] = create_burn_beam(ink);
+      }
+      return beam.burn[ink];
+    },
+    
+    'loading_screen': function () {
       if (json.loading_screen !== null) {
         if (loading_screen === undefined) {
           loading_screen = render_screen(json.loading_screen);
