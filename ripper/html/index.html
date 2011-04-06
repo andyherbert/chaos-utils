@@ -5,45 +5,13 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Chaos</title>
   <link rel="shortcut icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhUlEQVQ4EZ2SgQrAIAhEdez/f9klTLnsZqNAsu7uVWMqIjbqeFzHyTfYAsxMvLrRArpgaDqa5YjdqRlWleUGLKzD6IUj1gnA94aIAe/ZfgKYWAEMkoAw/wGhZwEECGf2XUKfAEgOw26eADsz0ymAXZntOfBG6pcJPbWnf2I1dWv6hC5QtQfK4CEgAQxPAAAAAABJRU5ErkJggg==" />
-  <script src="globals.js" type="text/javascript" charset="utf-8"></script>
-  <script src="lib.js" type="text/javascript" charset="utf-8"></script>
-  <script src="storage.js" type="text/javascript" charset="utf-8"></script>
-  <script src="world.js" type="text/javascript" charset="utf-8"></script>
-  <script src="info.js" type="text/javascript" charset="utf-8"></script>
-  <script src="board.js" type="text/javascript" charset="utf-8"></script>
-  <style type="text/css" media="screen">
-  body {
-    background-color: black;
-    margin: 0;
-  }
-  
-  #centered_container {
-    width: 1032px;
-    margin: 16px auto;
-  }
-  
-  #left_display, #right_display {
-    width: 512px;
-  }
-  
-  #left_display {
-    float: left;
-  }
-  
-  #right_display {
-    float: right;
-    clear: right;
-  }
-  
-  #board, #info {
-    width: 512px;
-    height: 384px;
-  }
-  
-  #board {
-    cursor: none;
-  }
-  </style>
+  <script src="js/globals.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/lib.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/storage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/world.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/info.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
+  <link rel="stylesheet" href="css/chaos.css" type="text/css" media="screen">
 </head>
 <body>
   <div id='centered_container'>
@@ -61,12 +29,12 @@ function start() {
     Board.init($('board'));
     Info.init($('info'));
     Board.draw_arena();
-    World.add_object(4, 3, king_cobra);
+    World.add_object(5, 1, king_cobra);
     World.add_object(1, 1, golden_dragon);
     setTimeout(function () {
-      Board.burn_beam(1, 1, 4, 3, function () {
-        Board.dragon_burn_effect(4, 3, function () {
-          World.kill_object(4, 3);
+      Board.burn_beam(1, 1, 5, 1, function () {
+        Board.dragon_burn_effect(5, 1, function () {
+          World.kill_object(5, 1);
         });
       });
     }, 2000);

@@ -1,5 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global $: true, create_canvas: true, tile_horizontal: true, tile_vertical: true, http_get: true, Board: true, RGB: true */
+/*global $: true, create_canvas: true, tile_horizontal: true, tile_vertical: true, http_get: true, Board: true, RGB: true, World: true */
 var Info = (function () {
   var canvas, ctx, scale_factor, current_object;
   
@@ -68,17 +68,22 @@ var Info = (function () {
   }
   
   function show_full_info(slice) {
-    var new_object = (slice.blob || slice.object || slice.wizard || slice.corpse);
+    var new_object = (slice.blob || slice.object || slice.wizard || slice.corpse), stats_ctx;
     if (new_object) {
       if (new_object !== current_object) {
         current_object = new_object;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.b_green, 0), 0, 0);
-        ctx.drawImage(stats(current_object), 32 * scale_factor, 16 * scale_factor);
+        if (current_object.stats_canvas === undefined) {
+          current_object.stats_canvas = create_canvas(canvas.width, canvas.height);
+          stats_ctx = current_object.stats_canvas.getContext('2d');
+          stats_ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.b_green, 0), 0, 0);
+          stats_ctx.drawImage(stats(current_object), 32 * scale_factor, 16 * scale_factor);
+        }
+        ctx.drawImage(current_object.stats_canvas, 0, 0);
       }
     } else {
       current_object = undefined;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      Board.clear_text();
     }
   }
   

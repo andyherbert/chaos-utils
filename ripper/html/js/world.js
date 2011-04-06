@@ -8,11 +8,12 @@ var World = (function () {
     return layer[y * 15 + x];
   }
   
-  function add_object(layer, x, y, object) {
+  function add_object(layer, x, y, object, dead) {
     object.x = x;
     object.y = y;
     object.tic_count = 0;
     object.frame_index = 0;
+    object.dead = dead;
     layer[y * 15 + x] = object;
     Board.update_cell(x, y);
   }
@@ -39,7 +40,7 @@ var World = (function () {
   
   return {
     'add_corpse': function (x, y, object) {
-      add_object(layer.corpse, x, y, object);
+      add_object(layer.corpse, x, y, object, true);
     },
     
     'remove_corpse': function (x, y) {
@@ -47,7 +48,7 @@ var World = (function () {
     },
     
     'add_wizard': function (x, y, object) {
-      add_object(layer.wizard, x, y, object);
+      add_object(layer.wizard, x, y, object, false);
     },
     
     'remove_wizard': function (x, y) {
@@ -55,11 +56,11 @@ var World = (function () {
     },
     
     'add_object': function (x, y, object) {
-      add_object(layer.object, x, y, object);
+      add_object(layer.object, x, y, object, false);
     },
     
     'kill_object': function (x, y) {
-      add_object(layer.corpse, x, y, get(layer.object, x, y));
+      add_object(layer.corpse, x, y, get(layer.object, x, y), true);
       remove_object(layer.object, x, y);
     },
     
@@ -107,6 +108,11 @@ var World = (function () {
     'get_slice': function (x, y) {
       var i = y * 15 + x;
       return {'corpse': layer.corpse[i], 'wizard': layer.wizard[i], 'object': layer.object[i], 'blob': layer.blob[i]};
+    },
+    
+    'visible': function (x, y) {
+      var i = y * 15 + x;
+      return (layer.blob[i] || layer.object[i] || layer.wizard[i] || layer.corpse[i]);
     }
   };
 }());

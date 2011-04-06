@@ -85,6 +85,14 @@ Object.prototype.clone = function () {
   return obj;
 };
 
+Object.prototype.sub_array = function (sub_index) {
+  var i, output = [];
+  for (i = 0; i < this.length; i += 1) {
+    output[output.length] = this[i][sub_index];
+  }
+  return output;
+};
+
 Object.prototype.hex_to_binary = function () {
   var output = parseInt(this, 16).toString(2);
   while (output.length < 8) {
@@ -99,6 +107,11 @@ Object.prototype.universal_offsetX = function () {
 
 Object.prototype.universal_offsetY = function () {
   return firefox ? (this.pageY - this.target.offsetTop) : this.offsetY;
+};
+
+Object.prototype.set_xy = function (x, y) {
+  this.x = x;
+  this.y = y;
 };
 
 function create_canvas(width, height) {
@@ -156,7 +169,7 @@ function tile_vertical(array_of_items) {
 }
 
 function line(sx, sy, dx, dy, scale) {
-  var output = [], delta_x, delta_y, step_x, step_y, err, err2, scale;
+  var output = [], delta_x, delta_y, step_x, step_y, err, err2;
   delta_x = Math.abs(dx - sx);
   delta_y = Math.abs(dy - sy);
   step_x = (sx < dx) ? 1 : -1;

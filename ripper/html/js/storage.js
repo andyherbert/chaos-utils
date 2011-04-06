@@ -145,7 +145,7 @@ var Storage = (function () {
     return scale(canvas, scale_factor);
   }
   
-  function create_simple_beam(ink) {
+  function create_line_beam(ink) {
     var canvas, ctx, image_data;
     canvas = create_canvas(1, 1);
     ctx = canvas.getContext('2d');
@@ -347,14 +347,14 @@ var Storage = (function () {
       return json.initial_positions[number_of_wizards - 2];
     },
     
-    'simple_beam': function (ink) {
-      if (beam.simple === undefined) {
-        beam.simple = [];
+    'line_beam': function (ink) {
+      if (beam.line === undefined) {
+        beam.line = [];
       }
-      if (beam.simple[ink] === undefined) {
-        beam.simple[ink] = create_simple_beam(ink);
+      if (beam.line[ink] === undefined) {
+        beam.line[ink] = create_line_beam(ink);
       }
-      return beam.simple[ink];
+      return beam.line[ink];
     },
     
     'spell_beam': function (ink) {
