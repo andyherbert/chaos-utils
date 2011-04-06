@@ -1,6 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global World: true, RGB: true, $: true, create_canvas: true, tile_horizontal: true, http_get: true, Info: true, Storage: true, line: true */
-
+/*global World: true, RGB: true, $: true, Canvas: true, Ajax: true, Info: true, Storage: true */
 var Board = (function () {
   var cursor, scale_factor, canvas, ctx;
   
@@ -168,23 +167,23 @@ var Board = (function () {
     },
     
     'line_beam': function (sx, sy, dx, dy, callback) {
-      start_beam(Storage.line_beam(RGB.b_white), Storage.line_beam(RGB.black), 20, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
+      start_beam(Storage.line_beam(RGB.b_white), Storage.line_beam(RGB.black), 20, Canvas.line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
     },
     
     'spell_beam': function (sx, sy, dx, dy, callback) {
-      start_beam(Storage.spell_beam(RGB.b_cyan), Storage.spell_beam(RGB.black), 30, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
+      start_beam(Storage.spell_beam(RGB.b_cyan), Storage.spell_beam(RGB.black), 30, Canvas.line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
     },
     
     'burn_beam': function (sx, sy, dx, dy, callback) {
-      start_beam(Storage.burn_beam(RGB.b_yellow), Storage.burn_beam(RGB.black), 44, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 4, callback);
+      start_beam(Storage.burn_beam(RGB.b_yellow), Storage.burn_beam(RGB.black), 44, Canvas.line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 4, callback);
     },
     
     'lightning': function (sx, sy, dx, dy, callback) {
-      start_beam(Storage.burn_beam(RGB.b_white), Storage.burn_beam(RGB.black), 44, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 4, callback);
+      start_beam(Storage.burn_beam(RGB.b_white), Storage.burn_beam(RGB.black), 44, Canvas.line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 4, callback);
     },
     
     'magic_bolt': function (sx, sy, dx, dy, callback) {
-      start_beam(Storage.burn_beam(RGB.b_yellow), Storage.burn_beam(RGB.black), 1, line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
+      start_beam(Storage.burn_beam(RGB.b_yellow), Storage.burn_beam(RGB.black), 1, Canvas.line(sx * 16 + 16, sy * 16 + 16, dx * 16 + 16, dy * 16 + 16, scale_factor), 1, callback);
     },
     
     'flash_cell': function (x, y, callback) {
@@ -244,9 +243,9 @@ var Board = (function () {
       freeze();
       draw_text(wizard_name);
       setTimeout(function () {
-        draw_text(tile_horizontal([wizard_name, spell_name]));
+        draw_text(Canvas.tile_horizontal([wizard_name, spell_name]));
         setTimeout(function () {
-          draw_text(tile_horizontal([wizard_name, spell_name, range]));
+          draw_text(Canvas.tile_horizontal([wizard_name, spell_name, range]));
           setTimeout(function () {
             set_interactive();
             callback();

@@ -1,5 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global $: true, create_canvas: true, http_get: true, scale: true */
+/*global $: true, Canvas: true, Ajax: true */
 var Storage = (function () {
   var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], effect = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen, beam = {};
   
@@ -26,7 +26,7 @@ var Storage = (function () {
   function render_sprite(bytes, ink, paper) {
     var bits, canvas, ctx, image_data;
     bits = get_bits(bytes);
-    canvas = create_canvas(bits[0].length, bits.length);
+    canvas = Canvas.create(bits[0].length, bits.length);
     ctx = canvas.getContext('2d');
     image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     bits.each_pair(function (y, line) {
@@ -39,7 +39,7 @@ var Storage = (function () {
       });
     });
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale_factor);
   }
   
   function render_object(anim, ink, paper) {
@@ -124,7 +124,7 @@ var Storage = (function () {
   
   function render_screen(raw_screen) {
     var parsed_screen = parse_screen(raw_screen), canvas, ctx, image_data, x, y, attrib_y, attribute, ink, paper;
-    canvas = create_canvas(parsed_screen.pixels[0].length, parsed_screen.pixels.length);
+    canvas = Canvas.create(parsed_screen.pixels[0].length, parsed_screen.pixels.length);
     ctx = canvas.getContext('2d');
     image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     for (y = 0; y < canvas.height; y += 1) {
@@ -142,22 +142,22 @@ var Storage = (function () {
       }
     }
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale_factor);
   }
   
   function create_line_beam(ink) {
     var canvas, ctx, image_data;
-    canvas = create_canvas(1, 1);
+    canvas = Canvas.create(1, 1);
     ctx = canvas.getContext('2d');
     image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     image_data.insert_rgb(0, 0, palette[ink]);
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale_factor);
   }
   
   function create_spell_beam(ink) {
     var canvas, ctx, image_data;
-    canvas = create_canvas(3, 3);
+    canvas = Canvas.create(3, 3);
     ctx = canvas.getContext('2d');
     image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     image_data.insert_rgb(1, 0, palette[ink]);
@@ -166,12 +166,12 @@ var Storage = (function () {
     image_data.insert_rgb(2, 1, palette[ink]);
     image_data.insert_rgb(1, 2, palette[ink]);
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale_factor);
   }
   
   function create_burn_beam(ink) {
     var canvas, ctx, image_data;
-    canvas = create_canvas(7, 7);
+    canvas = Canvas.create(7, 7);
     ctx = canvas.getContext('2d');
     image_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     image_data.insert_rgb(3, 2, palette[ink]);
@@ -188,12 +188,12 @@ var Storage = (function () {
     image_data.insert_rgb(5, 5, palette[ink]);
     image_data.insert_rgb(3, 6, palette[ink]);
     ctx.putImageData(image_data, 0, 0);
-    return scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale_factor);
   }
   
   return {
     'init': function (factor, success, failure) {
-      http_get('chaos.json', function (response_text) {
+      Ajax.get('json/chaos.json', function (response_text) {
         scale_factor = factor;
         json = JSON.parse(response_text);
         palette = expand_palette(json.palette);
@@ -241,7 +241,7 @@ var Storage = (function () {
         height = Math.max(height, canvas.height);
         letters[letters.length] = canvas;
       });
-      canvas = create_canvas(width, height);
+      canvas = Canvas.create(width, height);
       ctx = canvas.getContext('2d');
       width = 0;
       letters.each(function (character) {
@@ -253,7 +253,7 @@ var Storage = (function () {
     
     'border': function (width, height, ink, paper) {
       var canvas, ctx, border = fetch_border(ink, paper), size = border[0].width / 2, i;
-      canvas = create_canvas(width, height);
+      canvas = Canvas.create(width, height);
       ctx = canvas.getContext('2d');
       for (i = size; i < height - size; i += size) {
         ctx.drawImage(border[0], 0, 0, size, size, 0, i, size, size);
