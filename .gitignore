@@ -1,6 +1,6 @@
 .DS_Store
-./make_json
-./deploy_website
+make_json
+deploy_website
 gooey-blob-group/gooeyblob.html
 gooey-blob-group/gooeyblob.json
 ripper/chaos.sna
