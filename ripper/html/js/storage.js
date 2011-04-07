@@ -284,6 +284,10 @@ var Storage = (function () {
       return fetch_wizard(wizard_index, ink);
     },
     
+    'wizard_timing': function () {
+      return json.wizards.timing;
+    },
+    
     'effect': function (name, ink) {
       if (effect[ink] === undefined) {
         effect[ink] = {};
@@ -344,7 +348,7 @@ var Storage = (function () {
     },
     
     'initial_positions': function (number_of_wizards) {
-      return json.initial_positions[number_of_wizards - 2];
+      return (number_of_wizards === 1) ? [json.initial_positions[0][0]] : json.initial_positions[number_of_wizards - 2];
     },
     
     'line_beam': function (ink) {

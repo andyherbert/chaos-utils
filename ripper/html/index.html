@@ -10,6 +10,7 @@
   <script src="js/canvas.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/prototypes.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/storage.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/wizard.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/world.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/info.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
@@ -31,15 +32,36 @@ function start() {
     Board.init($('board'));
     Info.init($('info'));
     Board.draw_arena();
-    World.add_object(5, 1, king_cobra);
-    World.add_object(1, 1, golden_dragon);
+    Wizard.create('Julian', 0, 0, 15);
     setTimeout(function () {
-      Board.burn_beam(1, 1, 5, 1, function () {
-        Board.dragon_burn_effect(5, 1, function () {
-          World.kill_object(5, 1);
-        });
-      });
+      Wizard.create('Gandalf', 0, 1, 14);
+    }, 1000);
+    setTimeout(function () {
+      Wizard.create('GreatFogey', 0, 2, 13);
     }, 2000);
+    setTimeout(function () {
+      Wizard.create('Dyerarti', 0, 3, 12);
+    }, 3000);
+    setTimeout(function () {
+      Wizard.create('Gowin', 0, 4, 11);
+    }, 4000);
+    setTimeout(function () {
+      Wizard.create('Merlin', 0, 5, 10);
+    }, 5000);
+    setTimeout(function () {
+      Wizard.create('Ilian Rane', 0, 6, 9);
+    }, 6000);
+    setTimeout(function () {
+      Wizard.create('Asimono Zark', 0, 7, 7);
+    }, 7000);
+    // World.add_object(1, 1, golden_dragon);
+    // setTimeout(function () {
+    //   Board.burn_beam(1, 1, 5, 1, function () {
+    //     Board.dragon_burn_effect(5, 1, function () {
+    //       World.kill_object(5, 1);
+    //     });
+    //   });
+    // }, 2000);
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');
   });

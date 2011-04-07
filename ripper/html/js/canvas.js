@@ -37,14 +37,18 @@ var Canvas = (function () {
     'tile_horizontal': function (array_of_items) {
       var width = 0, height = 0, x = 0, output, ctx;
       array_of_items.each(function (canvas) {
-        width += canvas.width;
-        height = Math.max(height, canvas.height);
+        if (canvas !== undefined) {
+          width += canvas.width;
+          height = Math.max(height, canvas.height);
+        }
       });
       output = create(width, height);
       ctx = output.getContext('2d');
       array_of_items.each(function (canvas) {
-        ctx.drawImage(canvas, x, 0);
-        x += canvas.width;
+        if (canvas !== undefined) {
+          ctx.drawImage(canvas, x, 0);
+          x += canvas.width;
+        }
       });
       return output;
     },
@@ -52,14 +56,18 @@ var Canvas = (function () {
     'tile_vertical': function (array_of_items) {
       var width = 0, height = 0, y = 0, output, ctx;
       array_of_items.each(function (canvas) {
-        width = Math.max(width, canvas.width);
-        height += canvas.height;
+        if (canvas !== undefined) {
+          width = Math.max(width, canvas.width);
+          height += canvas.height;
+        }
       });
       output = create(width, height);
       ctx = output.getContext('2d');
       array_of_items.each(function (canvas) {
-        ctx.drawImage(canvas, 0, y);
-        y += canvas.height;
+        if (canvas !== undefined) {
+          ctx.drawImage(canvas, 0, y);
+          y += canvas.height;
+        }
       });
       return output;
     },

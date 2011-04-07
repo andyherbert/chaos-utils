@@ -46,7 +46,7 @@ var Board = (function () {
       draw_image(frames[frame_counter % frames.length], x, y);
       setTimeout(function () {
         do_effect_tic(frames, x, y, repeat, callback, frame_counter + 1);
-      }, 75);
+      }, 30);
     } else {
       callback();
     }
@@ -101,7 +101,7 @@ var Board = (function () {
     x = Math.floor((mouse_event.universal_offsetX() - 8 * scale_factor) / size);
     y = Math.floor((mouse_event.universal_offsetY() - 8 * scale_factor) / size);
     if ((x >= 0) && (x < 15) && (y >= 0) && (y < 10)) {
-      if ((x !== cursor.x) || (y !== cursor.y)) {
+      if ((x !== cursor.x) || (y !== cursor.y) || old_cursor.out_of_bounds) {
         array_index = y * 15 + x;
         cursor.set_xy(x, y);
         cursor.out_of_bounds = false;
@@ -133,7 +133,7 @@ var Board = (function () {
       }
       setTimeout(function () {
         do_beam_effect(beam_image, cleanup_image, length, pixels, step, callback, count + 1);
-      }, 5);
+      }, 10);
     } else {
       callback();
     }

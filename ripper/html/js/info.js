@@ -4,7 +4,7 @@ var Info = (function () {
   var canvas, ctx, scale_factor, current_object;
   
   function stats(object) {
-    var name, alignment, attributes = [], combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance;
+    var name, alignment, attributes = [], combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance, wizard_stats;
     name = Storage.text(object.name + ' ', RGB.b_yellow);
     if (object.chaos_law_value !== 0) {
       if (object.chaos_law_value > 0) {
@@ -14,11 +14,26 @@ var Info = (function () {
       }
       name = Canvas.tile_horizontal([name, alignment]);
     }
+    if (object.knife) {
+      attributes[attributes.length] = Storage.in_game_message(62);
+    }
+    if (object.sword) {
+      attributes[attributes.length] = Storage.in_game_message(63);
+    }
+    if (object.armour) {
+      attributes[attributes.length] = Storage.in_game_message(64);
+    }
+    if (object.shield) {
+      attributes[attributes.length] = Storage.in_game_message(65);
+    }
     if (object.mount) {
       attributes[attributes.length] = Storage.in_game_message(68);
     }
     if (object.flying) {
       attributes[attributes.length] = Storage.in_game_message(66);
+    }
+    if (object.shadow) {
+      attributes[attributes.length] = Storage.in_game_message(67);
     }
     if (object.undead) {
       attributes[attributes.length] = Storage.in_game_message(69);
@@ -30,7 +45,10 @@ var Info = (function () {
     movement_allowance = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(76), RGB.b_cyan), Storage.text(String(object.movement_allowance), RGB.b_white)]);
     manoeuvre_rating = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(77), RGB.b_cyan), Storage.text(String(object.manoeuvre_rating), RGB.b_white)]);
     magic_resistance = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(78), RGB.b_cyan), Storage.text(String(object.magic_resistance), RGB.b_white)]);
-    return Canvas.tile_vertical([name, attributes, combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance]);
+    if (object.spells !== undefined && object.ability !== undefined) {
+      wizard_stats = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(81) + object.spells + ' ' + Storage.in_game_message(82) + object.ability, RGB.b_yellow)]);
+    }
+    return Canvas.tile_vertical([name, attributes, combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance, wizard_stats]);
   }
   
   function get_short_info(slice) {
@@ -103,6 +121,7 @@ var Info = (function () {
     'wipe': function () {
       current_object = undefined;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      Board.clear_text();
     }
   };
 }());

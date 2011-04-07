@@ -1,4 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
+/*global Canvas: true */
 var firefox = (navigator.userAgent.indexOf('Firefox') !== -1);
 
 function $(element_id) {
