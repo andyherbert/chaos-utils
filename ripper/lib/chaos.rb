@@ -27,7 +27,7 @@ class Chaos
       locations = Array.new
       ((location - 0x909f) / 8 + 2).times do |num|
         bin = @memory[location + num].chr.unpack('B8').first
-        locations << [bin[4, 4].to_i(2), bin[0, 4].to_i(2)]
+        locations << {:x => bin[4, 4].to_i(2), :y => bin[0, 4].to_i(2)}
       end
       output << locations
     end
