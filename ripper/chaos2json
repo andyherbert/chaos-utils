@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'json'
-require 'lib/chaos'
+require '../chaos-lib/chaos'
 
 puts JSON.pretty_generate(Chaos.new('chaos.sna', 'chaos.scr').dump)

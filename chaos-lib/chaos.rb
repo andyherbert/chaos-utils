@@ -1,7 +1,7 @@
 class Chaos
-  def initialize(sna_filename, scr_filename)
+  def initialize(sna_filename, scr_filename = nil)
     @memory = read_file(sna_filename, Array.new(16384 - 27, 0x00)) if File.exists? sna_filename
-    @screen = read_file(scr_filename) if File.exists? scr_filename
+    @screen = read_file(scr_filename) if scr_filename && File.exists?(scr_filename)
   end
   
   def palette
@@ -197,7 +197,32 @@ class Chaos
     }
   end
   
+  def poke_spells(wizard_number, spells)
+    start_location = 0x7f48 + wizard_number * 40
+    spell_index = 0
+    (start_location..start_location + 40).step(2) do |index|
+      @memory[index] = spells[spell_index] ? get_spell_index(spells[spell_index]) : 0
+      spell_index += 1
+    end
+  end
+  
+  def dump_snapshot(filename)
+    File.open(filename, 'w') do |file|
+      ((16384 - 27)...@memory.length).each do |location|
+        file.print @memory[location].chr
+      end
+    end
+  end
+  
   private
+  
+  def get_spell_index(name)
+    spells_lookup = spells
+    spells_lookup.each_with_index do |spell, index|
+      return index + 1 if spell[:name] == name
+    end
+    return 0
+  end
   
   def scr_dump
     output = {:pixels => Array.new, :attributes => Array.new}
