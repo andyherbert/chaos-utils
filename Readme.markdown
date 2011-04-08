@@ -29,6 +29,10 @@ json.
 If `chaos.scr` containing the loading screen is also located in the working
 directory, then it will be appended to the json object.
 
+## spell poker/poke_spells.rb
+
+Pokes spells into a chaos snapshot (see source for examples).
+
 # Contact
 
 andy.herbert@gmail.com
