@@ -27,7 +27,7 @@ World = (function () {
   function do_tic() {
     layer.each_pair(function (layer_name, objects) {
       objects.each(function (object) {
-        if ((object !== undefined) && (layer_name !== 'corpse')) {
+        if ((object !== undefined) && !object.dead) {
           object.tic_count += 1;
           if (object.tic_count === object.anim_timing) {
             object.tic_count = 0;
@@ -54,6 +54,11 @@ World = (function () {
     
     'remove_wizard': function (x, y) {
       remove_object(layer.wizard, x, y);
+    },
+    
+    'move_wizard': function (sx, sy, dx, dy) {
+      add_object(layer.wizard, dx, dy, get(layer.wizard, sx, sy));
+      remove_object(layer.wizard, sx, sy);
     },
     
     'add_object': function (object, x, y) {

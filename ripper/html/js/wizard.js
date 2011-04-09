@@ -32,13 +32,15 @@ Wizard = (function () {
       'armour': false,
       'shield': false,
       'flying': false,
-      'shadow': false,
+      'shadow_form': false,
       'spellbook': spellbook,
       'name': name,
       'character': character,
       'level': level,
       'anim_timing': Storage.wizard_timing(),
       'anim': [sprite, sprite, sprite, sprite],
+      'flash': Storage.flash_wizard(character, Board.get_scale()),
+      'black': Storage.wizard(character, RGB.black, Board.get_scale()),
       'ink': ink,
       'id': wizards.length,
       'wizard': true
@@ -59,13 +61,14 @@ Wizard = (function () {
     }
   }
   
-  function update_wizard(index, anim) {
-    delete (wizards[index].stats_canvas);
-    if (wizards[index].shadow) {
-      wizards[index].anim = [anim[0], Storage.wizard(wizards[index].character, RGB.black, scale), anim[2], Storage.wizard(wizards[index].character, RGB.black, scale)];
-    } else {
-      wizards[index].anim = anim;
+  function update_wizard(index, name) {
+    var ink, scale = Board.get_scale();
+    wizards[index].anim = Storage.weapon(name, wizards[index].ink, scale);
+    for (ink = 0; ink < 7; ink += 1) {
+      wizards[index].flash[ink] = Storage.weapon(name, 15 - ink, scale);
     }
+    wizards[index].black = Storage.weapon(name, RGB.black, scale);
+    delete (wizards[index].stats_canvas);
     Board.update_cell(wizards[index].x, wizards[index].y, true);
   }
   
@@ -78,35 +81,35 @@ Wizard = (function () {
     'equip_knife': function (index) {
       wizards[index].knife = true;
       wizards[index].sword = false;
-      update_wizard(index, Storage.weapon('magic_knife', wizards[index].ink, scale));
+      update_wizard(index, 'magic_knife');
     },
     
     'equip_sword': function (index) {
       wizards[index].knife = false;
       wizards[index].sword = true;
-      update_wizard(index, Storage.weapon('magic_sword', wizards[index].ink, scale));
+      update_wizard(index, 'magic_sword');
     },
     
     'equip_shield': function (index) {
       wizards[index].armour = false;
       wizards[index].shield = true;
-      update_wizard(index, Storage.weapon('magic_shield', wizards[index].ink, scale));
+      update_wizard(index, 'magic_shield');
     },
     
     'equip_armour': function (index) {
       wizards[index].armour = true;
       wizards[index].shield = false;
-      update_wizard(index, Storage.weapon('magic_armour', wizards[index].ink, scale));
+      update_wizard(index, 'magic_armour');
     },
     
     'equip_wings': function (index) {
       wizards[index].flying = true;
-      update_wizard(index, Storage.weapon('magic_wings', wizards[index].ink, scale));
+      update_wizard(index, 'magic_wings');
     },
     
     'shadow_form': function (index) {
-      wizards[index].shadow = true;
-      update_wizard(index, wizards[index].anim);
+      wizards[index].shadow_form = true;
+      Board.update_cell(wizards[index].x, wizards[index].y, true);
     },
     
     'get_wizard': function (index) {

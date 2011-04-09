@@ -134,7 +134,7 @@ Storage = (function () {
     return output;
   }
   
-  function render_screen(raw_screen) {
+  function render_screen(raw_screen, scale) {
     var parsed_screen = parse_screen(raw_screen), canvas, ctx, image_data, x, y, attrib_y, attribute, ink, paper;
     canvas = Canvas.create(parsed_screen.pixels[0].length, parsed_screen.pixels.length);
     ctx = canvas.getContext('2d');
@@ -154,7 +154,7 @@ Storage = (function () {
       }
     }
     ctx.putImageData(image_data, 0, 0);
-    return Canvas.scale(canvas, scale_factor);
+    return Canvas.scale(canvas, scale);
   }
   
   function create_line_beam(ink, scale) {
@@ -205,8 +205,8 @@ Storage = (function () {
   
   return {
     'init': function (success, failure) {
-      Ajax.get('json/chaos.json', function (response_text) {
-        json = JSON.parse(response_text);
+      Ajax.get('json/chaos.json', function (reply) {
+        json = reply;
         palette = expand_palette(json.palette);
         success(json);
       }, function (status) {
@@ -249,21 +249,11 @@ Storage = (function () {
     },
     
     'text': function (text, ink, scale) {
-      var canvas, ctx, letters = [], width = 0, height = 0;
+      var letters = [];
       text.each_char_with_index(function (character, index) {
-        canvas = fetch_character(character, ink, RGB.black, scale);
-        width += canvas.width;
-        height = Math.max(height, canvas.height);
-        letters[letters.length] = canvas;
+        letters[letters.length] = fetch_character(character, ink, RGB.black, scale);
       });
-      canvas = Canvas.create(width, height);
-      ctx = canvas.getContext('2d');
-      width = 0;
-      letters.each(function (character) {
-        ctx.drawImage(character, width, 0);
-        width += character.width;
-      });
-      return canvas;
+      return Canvas.tile_horizontal(letters);
     },
     
     'border': function (width, height, ink, paper, scale) {
@@ -323,14 +313,15 @@ Storage = (function () {
     },
     
     'flash_wizard': function (wizard_index, scale) {
-      var ink;
+      var ink, sprite;
       if (rainbow_wizard[scale] === undefined) {
         rainbow_wizard[scale] = [];
       }
       if (rainbow_wizard[scale][wizard_index] === undefined) {
         rainbow_wizard[scale][wizard_index] = [];
         for (ink = 0; ink < 7; ink += 1) {
-          rainbow_wizard[scale][wizard_index][ink] = fetch_wizard(wizard_index, 15 - ink, scale);
+          sprite = fetch_wizard(wizard_index, 15 - ink, scale);
+          rainbow_wizard[scale][wizard_index][ink] = [sprite, sprite, sprite, sprite];
         }
       }
       return rainbow_wizard[scale][wizard_index];

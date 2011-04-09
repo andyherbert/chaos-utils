@@ -9,7 +9,7 @@ body {
   margin: 32px auto 0px auto;
 }
 
-#left_column, #right_column, #info, #spelldisplay {
+#left_column, #right_column, #info, #spell_display {
   width: 256px;
   height: 384px;
 }

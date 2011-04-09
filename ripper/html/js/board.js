@@ -40,7 +40,13 @@ Board = (function () {
     erase(x, y);
     World.get_slice(x, y).each_pair(function (layer_name, object) {
       if (object !== undefined) {
-        draw_image(object.dead ? object.corpse : object.anim[object.frame_index], object.x, object.y);
+        if (object.shadow_form && ((object.frame_index % 2) !== 0)) {
+          draw_image(object.black, object.x, object.y);
+        } else if (object.dead) {
+          draw_image(object.corpse, object.x, object.y);
+        } else {
+          draw_image(object.anim[object.frame_index], object.x, object.y);
+        }
       }
     });
     if ((cursor.x === x) && (cursor.y === y) && !cursor.hidden && !cursor.out_of_bounds) {
@@ -51,12 +57,12 @@ Board = (function () {
     }
   }
   
-  function do_effect_tic(frames, x, y, repeat, callback, frame_counter) {
+  function do_effect_tic(frames, x, y, repeat, callback, frame_counter, speed) {
     if ((frames.length * repeat) !== frame_counter) {
       draw_image(frames[frame_counter % frames.length], x, y);
       setTimeout(function () {
-        do_effect_tic(frames, x, y, repeat, callback, frame_counter + 1);
-      }, 30);
+        do_effect_tic(frames, x, y, repeat, callback, frame_counter + 1, speed);
+      }, speed);
     } else {
       callback();
     }
@@ -82,13 +88,13 @@ Board = (function () {
     }
   }
   
-  function start_effect(frames, x, y, callback, repeat) {
+  function start_effect(frames, x, y, callback, repeat, speed) {
     freeze();
     do_effect_tic(frames, x, y, repeat, function () {
       update_cell(x, y);
       set_interactive();
       callback();
-    }, 0);
+    }, 0, speed);
   }
   
   function mouse_out(mouse_event) {
@@ -157,6 +163,30 @@ Board = (function () {
     }, 0);
   }
   
+  function do_wizard_death(frames, black, x, y, callback, count) {
+    var ink, tic, sprite, i, start_x, start_y;
+    if (count < 40) {
+      ink = Math.floor(count / 5);
+      tic = count % 5;
+      sprite = (ink === 7) ? black : frames[ink];
+      start_x = (8 + x * 16) * scale;
+      start_y = (8 + y * 16) * scale;
+      for (i = 1; i < 7; i += 1) {
+        ctx.drawImage(sprite, start_x - ((tic * 6 + i) * 8) * scale, start_y);
+        ctx.drawImage(sprite, start_x + ((tic * 6 + i) * 8) * scale, start_y);
+        ctx.drawImage(sprite, start_x, start_y - ((tic * 6 + i) * 8) * scale);
+        ctx.drawImage(sprite, start_x, start_y + ((tic * 6 + i) * 8) * scale);
+      }
+      setTimeout(function () {
+        do_wizard_death(frames, black, x, y, callback, count + 1);
+      }, 10);
+    } else {
+      canvas.restore_buffer();
+      set_interactive();
+      callback();
+    }
+  }
+  
   return {
     'init': function (element, use_scale, callback) {
       cursor = {
@@ -196,40 +226,55 @@ Board = (function () {
     
     'flash_cell': function (x, y, callback) {
       var visible = World.visible(x, y), frames;
-      if (visible) {
-        if (!visible.wizard && !visible.dead) {
+      if (visible && !visible.dead) {
+        if (visible.wizard) {
+          frames = visible.flash.sub_array(visible.frame_index);
+        } else {
           frames = Storage.flash_object(visible.id, scale).sub_array(visible.frame_index);
-          start_effect(frames, x, y, function () {
-            callback();
-          }, 3);
         }
+        start_effect(frames, x, y, function () {
+          callback();
+        }, 3, 100);
+      }
+    },
+    
+    'wizard_death': function (x, y, callback) {
+      var slice = World.get_slice(x, y);
+      if (slice.wizard) {
+        freeze();
+        canvas.save_buffer();
+        do_wizard_death(slice.wizard.flash.sub_array(slice.wizard.frame_index), slice.wizard.black, x, y, callback, 0);
       }
     },
     
     'dragon_burn_effect': function (x, y, callback) {
       start_effect(Storage.effect('dragon_burn', RGB.b_yellow, scale), x, y, function () {
         callback();
-      }, 1);
+      }, 1, 30);
     },
     
     'attack_effect': function (x, y, callback) {
       start_effect(Storage.effect('attack', RGB.b_yellow, scale), x, y, function () {
         callback();
-      }, 1);
+      }, 1, 30);
     },
     
     'exploding_circle_effect': function (x, y, callback) {
       start_effect(Storage.effect('exploding_circle', RGB.b_white, scale), x, y, function () {
         callback();
-      }, 1);
+      }, 1, 30);
     },
     
     'twirl_effect': function (x, y, callback) {
-      start_effect(Storage.effect('twirl', RGB.b_cyan, scale), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('twirl', RGB.b_cyan, scale), x, y, function () {
+        callback();
+      }, 1, 30);
     },
     
     'explosion_effect': function (x, y, callback) {
-      start_effect(Storage.effect('explosion', RGB.b_yellow, scale), x, y, function () { callback(); }, 1);
+      start_effect(Storage.effect('explosion', RGB.b_yellow, scale), x, y, function () {
+        callback();
+      }, 1, 30);
     },
     
     'footer': function (image) {
