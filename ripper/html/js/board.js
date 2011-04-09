@@ -259,7 +259,7 @@ Board = (function () {
     
     'draw_arena': function () {
       erase();
-      ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.blue, 0), 0, 0);
+      ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.blue, RGB.black), 0, 0);
       set_interactive();
     },
     

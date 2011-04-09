@@ -218,7 +218,9 @@ Storage = (function () {
       }
       output.anim = objects[object_id].anim;
       output.corpse = objects[object_id].corpse;
-      output.creator_id = creator_id;
+      if (creator_id) {
+        output.creator_id = creator_id;
+      }
       return output;
     },
     

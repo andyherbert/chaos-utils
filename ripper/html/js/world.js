@@ -1,7 +1,9 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
 /*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
 World = (function () {
-  var layer = {'corpse': [], 'wizard': [], 'object': [], 'blob': []}, anim_timer;
+  var layer = {'corpse': [], 'wizard': [], 'object': [], 'blob': []}, world_alignment, anim_timer;
+  
+  world_alignment = 0;
   
   function get(layer, x, y) {
     return layer[y * 15 + x];
@@ -112,6 +114,18 @@ World = (function () {
     'visible': function (x, y) {
       var i = y * 15 + x;
       return (layer.blob[i] || layer.object[i] || layer.wizard[i] || layer.corpse[i]);
+    },
+    
+    'cast_chance': function (wizard, spell) {
+      var world_offset;
+      if ((world_alignment < 0) && (spell.chaos_law_value < 0)) {
+        world_offset = Math.floor(Math.abs(world_alignment) / 4);
+      } else if ((world_alignment > 0) && (spell.chaos_law_value > 0)) {
+        world_offset = Math.floor(world_alignment / 4);
+      } else {
+        world_offset = 0;
+      }
+      return Math.min(9, wizard.ability + world_offset + spell.cast_chance);
     }
   };
 }());

@@ -133,6 +133,10 @@ Info = (function () {
       return get_short_info(slice);
     },
     
+    'stats': function (object) {
+      return stats(object);
+    },
+    
     'wipe': function () {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       Board.clear_text();

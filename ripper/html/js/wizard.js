@@ -4,13 +4,13 @@ Wizard = (function () {
   var wizards = [];
   
   function dice(divisor) {
-    return Math.round(Math.round(Math.random() * 9) / ((divisor === undefined) ? 1 : divisor));
+    return Math.floor(Math.round(Math.random() * 9) / ((divisor === undefined) ? 1 : divisor));
   }
   
   function generate_spells(number_of_spells) {
     var i, spells = [Storage.spell(0)];
     for (i = 0; i < number_of_spells; i += 1) {
-      spells[spells.length] = Storage.spell(Math.round(Math.random() * (Storage.number_of_spells() - 3)));
+      spells[spells.length] = Storage.spell(Math.floor(Math.random() * (Storage.number_of_spells() - 4)) + 1);
     }
     return spells;
   }
@@ -18,15 +18,15 @@ Wizard = (function () {
   function create(name, level, character, ink) {
     var spellbook = generate_spells(Math.min(20, 11 + dice(2) + level));
     return {
-      'combat': 1 + dice(2) + Math.round(level / 2),
+      'combat': 1 + dice(2) + Math.floor(level / 2),
       'ranged_combat': 0,
       'range': 0,
-      'defence': 1 + dice(2) + Math.round(level / 2),
+      'defence': 1 + dice(2) + Math.floor(level / 2),
       'movement_allowance': 1,
-      'manoeuvre_rating': 3 + dice(2) + Math.round(level / 4),
+      'manoeuvre_rating': 3 + dice(2) + Math.floor(level / 4),
       'magic_resistance': 6 + dice(4),
       'spells': (spellbook.length - 1),
-      'ability': (dice() >= 5 - level / 2) ? Math.round(level / 4) : 0,
+      'ability': (dice() >= 5 - level / 2) ? Math.floor(level / 4) : 0,
       'knife': false,
       'sword': false,
       'armour': false,

@@ -6,31 +6,27 @@ body {
 #centered_container {
   width: 1040px;
   height: 384px;
-  margin-top: 32px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 32px auto 0px auto;
 }
 
-#left_display, #right_display, #info, #spells {
+#left_column, #right_column, #info, #spelldisplay {
   width: 256px;
   height: 384px;
 }
 
-#middle_display {
+#middle_column, #board {
   width: 512px;
   height: 384px;
-  margin: 0px 8px;
 }
 
-#left_display, #middle_display, #right_display {
+#left_column, #middle_column, #right_column {
   float: left;
 }
 
-#right_display {
+#right_column {
   clear: right;
 }
 
-#board {
-  width: 512px;
-  height: 384px;
+#middle_column {
+  margin: 0px 8px;
 }
