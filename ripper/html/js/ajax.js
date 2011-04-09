@@ -1,5 +1,6 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-var Ajax = (function () {
+/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+Ajax = (function () {
   return {
     'get': function (url, success, failure) {
       var req = new XMLHttpRequest();

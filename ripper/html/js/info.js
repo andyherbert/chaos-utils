@@ -1,7 +1,7 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global $: true, Canvas: true, Ajax: true, Board: true, RGB: true, World: true */
-var Info = (function () {
-  var canvas, ctx, scale_factor, current_object;
+/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+Info = (function () {
+  var canvas, ctx, scale_factor;
   
   function stats(object) {
     var name, alignment, attributes = [], combat, ranged_and_range, defence, movement_allowance, manoeuvre_rating, magic_resistance, wizard_stats;
@@ -14,16 +14,14 @@ var Info = (function () {
       }
       name = Canvas.tile_horizontal([name, alignment]);
     }
-    if (object.knife) {
-      attributes[attributes.length] = Storage.in_game_message(62);
-    }
     if (object.sword) {
       attributes[attributes.length] = Storage.in_game_message(63);
+    } else if (object.knife) {
+      attributes[attributes.length] = Storage.in_game_message(62);
     }
     if (object.armour) {
       attributes[attributes.length] = Storage.in_game_message(64);
-    }
-    if (object.shield) {
+    } else if (object.shield) {
       attributes[attributes.length] = Storage.in_game_message(65);
     }
     if (object.mount) {
@@ -38,9 +36,9 @@ var Info = (function () {
     if (object.undead) {
       attributes[attributes.length] = Storage.in_game_message(69);
     }
-    attributes = Storage.text((attributes.length > 0) ? attributes.join(',') : ' ', RGB.b_green);
+    attributes = Storage.text((attributes.length > 0) ? attributes.join(',') : ' ', object.wizard ? RGB.b_yellow : RGB.b_green);
     combat = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(72), RGB.b_cyan), Storage.text(String(object.combat), RGB.b_white)]);
-    ranged_and_range = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(73), RGB.b_cyan), Storage.text(String(object.ranged_combat), RGB.b_white), Storage.text(' ' + Storage.in_game_message(74), RGB.b_cyan), Storage.text(String(object.range), RGB.b_white)]);
+    ranged_and_range = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(73), RGB.b_cyan), Storage.text(String(object.ranged_combat), RGB.b_white), Storage.text('  ' + Storage.in_game_message(74), RGB.b_cyan), Storage.text(String(object.range), RGB.b_white)]);
     defence = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(75), RGB.b_cyan), Storage.text(String(object.defence), RGB.b_white)]);
     movement_allowance = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(76), RGB.b_cyan), Storage.text(String(object.movement_allowance), RGB.b_white)]);
     manoeuvre_rating = Canvas.tile_horizontal([Storage.text(Storage.in_game_message(77), RGB.b_cyan), Storage.text(String(object.manoeuvre_rating), RGB.b_white)]);
@@ -60,7 +58,7 @@ var Info = (function () {
       } else if (slice.corpse) {
         text[text.length] = Storage.text('#', RGB.b_purple);
       }
-      text[text.length] = Storage.text('(' + slice.blob.creator + ')', RGB.b_yellow);
+      text[text.length] = Storage.text('(' + Wizard.get_wizard(slice.blob.creator_id).name + ')', RGB.b_yellow);
     } else if (slice.object) {
       text[text.length] = Storage.text(slice.object.name, RGB.b_cyan);
       if (slice.wizard) {
@@ -68,7 +66,7 @@ var Info = (function () {
       } else if (slice.corpse) {
         text[text.length] = Storage.text('#', RGB.b_purple);
       }
-      text[text.length] = Storage.text('(' + slice.object.creator + ')', RGB.b_yellow);
+      text[text.length] = Storage.text('(' + Wizard.get_wizard(slice.object.creator_id).name + ')', RGB.b_yellow);
     } else if (slice.wizard) {
       text[text.length] = Storage.text(slice.wizard.name, RGB.b_cyan);
       if (slice.corpse) {
@@ -85,23 +83,40 @@ var Info = (function () {
     }
   }
   
-  function show_full_info(slice) {
-    var new_object = (slice.blob || slice.object || slice.wizard || slice.corpse), stats_ctx;
-    if (new_object) {
-      if (new_object !== current_object) {
-        current_object = new_object;
-        if (current_object.stats_canvas === undefined) {
-          current_object.stats_canvas = Canvas.create(canvas.width, canvas.height);
-          stats_ctx = current_object.stats_canvas.getContext('2d');
-          stats_ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.b_green, 0), 0, 0);
-          stats_ctx.drawImage(stats(current_object), 32 * scale_factor, 16 * scale_factor);
-        }
-        ctx.drawImage(current_object.stats_canvas, 0, 0);
+  function fetch_stats(object) {
+    var stats_ctx;
+    if (object.stats_canvas === undefined) {
+      object.stats_canvas = Canvas.create(canvas.width, canvas.height / 2);
+      stats_ctx = object.stats_canvas.getContext('2d');
+      stats_ctx.drawImage(Storage.border(256 * scale_factor, 176 * scale_factor, RGB.b_green, 0), 0, 0);
+      stats_ctx.drawImage(stats(object), 32 * scale_factor, 16 * scale_factor);
+    }
+    return object.stats_canvas;
+  }
+  
+  function add_hidden_name(name) {
+    ctx.drawImage(Storage.text('(' + name + ')', RGB.b_green), 32 * scale_factor, 32 * scale_factor);
+  }
+  
+  function show_full_info(slice, force_update) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    Board.clear_text();
+    if (slice.blob) {
+      ctx.drawImage(fetch_stats(slice.blob), 0, 0);
+      if (slice.object) {
+        ctx.drawImage(fetch_stats(slice.object), 0, 192 * scale_factor);
+        add_hidden_name(slice.object.name);
       }
-    } else {
-      current_object = undefined;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      Board.clear_text();
+    } else if (slice.object) {
+      ctx.drawImage(fetch_stats(slice.object), 0, 0);
+      if (slice.wizard) {
+        ctx.drawImage(fetch_stats(slice.wizard), 0, 192 * scale_factor);
+        add_hidden_name(slice.wizard.name);
+      }
+    } else if (slice.wizard) {
+      ctx.drawImage(fetch_stats(slice.wizard), 0, 0);
+    } else if (slice.corpse) {
+      ctx.drawImage(fetch_stats(slice.corpse), 0, 0);
     }
   }
   
@@ -119,7 +134,6 @@ var Info = (function () {
     },
     
     'wipe': function () {
-      current_object = undefined;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       Board.clear_text();
     }

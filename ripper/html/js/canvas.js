@@ -1,5 +1,6 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-var Canvas = (function () {
+/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+Canvas = (function () {
   function create(width, height) {
     var canvas = document.createElement('CANVAS');
     canvas.setAttribute('WIDTH', width);

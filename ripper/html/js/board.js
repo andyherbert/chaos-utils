@@ -1,6 +1,6 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global World: true, RGB: true, $: true, Canvas: true, Ajax: true, Info: true, Storage: true */
-var Board = (function () {
+/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+Board = (function () {
   var cursor, scale_factor, canvas, ctx;
   
   function draw_image(image, x, y) {
@@ -20,6 +20,13 @@ var Board = (function () {
     }
   }
   
+  function draw_info(x, y) {
+    var text = Info.get_info(x, y);
+    if (text) {
+      draw_text(text);
+    }
+  }
+  
   function erase(x, y) {
     ctx.fillStyle = 'black';
     if ((x !== undefined) && (y !== undefined)) {
@@ -29,7 +36,7 @@ var Board = (function () {
     }
   }
   
-  function update_cell(x, y) {
+  function update_cell(x, y, info_updated) {
     erase(x, y);
     World.get_slice(x, y).each_pair(function (layer_name, object) {
       if (object !== undefined) {
@@ -37,7 +44,10 @@ var Board = (function () {
       }
     });
     if ((cursor.x === x) && (cursor.y === y) && !cursor.hidden && !cursor.out_of_bounds) {
-      ctx.drawImage(Storage.cursor(cursor.image, cursor.colour), x = (8 + x * 16) * scale_factor, y = (8 + y * 16) * scale_factor);
+      ctx.drawImage(Storage.cursor(cursor.image, cursor.colour), (8 + x * 16) * scale_factor, (8 + y * 16) * scale_factor);
+      if (info_updated) {
+        draw_info(x, y);
+      }
     }
   }
   
@@ -68,7 +78,7 @@ var Board = (function () {
     World.unfreeze();
     set_hidden_cursor(false);
     if (!cursor.out_of_bounds) {
-      Info.get_info(cursor.x, cursor.y);
+      draw_info(cursor.x, cursor.y);
     }
   }
   
@@ -86,13 +96,6 @@ var Board = (function () {
     if (!cursor.out_of_bounds) {
       cursor.out_of_bounds = true;
       update_cell(old_cursor.x, old_cursor.y);
-    }
-  }
-  
-  function draw_info(x, y) {
-    var text = Info.get_info(x, y);
-    if (text) {
-      draw_text(text);
     }
   }
   
@@ -260,8 +263,8 @@ var Board = (function () {
       set_interactive();
     },
     
-    'update_cell': function (x, y) {
-      update_cell(x, y);
+    'update_cell': function (x, y, info_update) {
+      update_cell(x, y, info_update);
     }
   };
 }());

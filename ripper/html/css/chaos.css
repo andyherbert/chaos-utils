@@ -4,28 +4,33 @@ body {
 }
 
 #centered_container {
-  width: 1032px;
-  margin: 16px auto;
+  width: 1040px;
+  height: 384px;
+  margin-top: 32px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-#left_display, #right_display {
+#left_display, #right_display, #info, #spells {
+  width: 256px;
+  height: 384px;
+}
+
+#middle_display {
   width: 512px;
+  height: 384px;
+  margin: 0px 8px;
 }
 
-#left_display {
+#left_display, #middle_display, #right_display {
   float: left;
 }
 
 #right_display {
-  float: right;
   clear: right;
 }
 
-#board, #info {
+#board {
   width: 512px;
   height: 384px;
-}
-
-#board {
-/*  cursor: none;*/
 }

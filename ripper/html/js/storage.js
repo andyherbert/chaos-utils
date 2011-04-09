@@ -1,6 +1,6 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global $: true, Canvas: true, Ajax: true */
-var Storage = (function () {
+/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+Storage = (function () {
   var scale_factor, json, palette, objects = [], character_set = [], borders = [], cursors = [], wizards = [], weapons = [], effect = [], rainbow_object = [], rainbow_wizard = [], rainbow_weapon = [], loading_screen, beam = {};
   
   function expand_palette(palette) {
@@ -207,7 +207,7 @@ var Storage = (function () {
       return scale_factor;
     },
     
-    'new_object': function (object_id, creator) {
+    'new_object': function (object_id, creator_id) {
       var output = json.objects[object_id].clone();
       if (objects[object_id] === undefined) {
         objects[object_id] = json.objects[object_id].clone();
@@ -218,7 +218,7 @@ var Storage = (function () {
       }
       output.anim = objects[object_id].anim;
       output.corpse = objects[object_id].corpse;
-      output.creator = creator;
+      output.creator_id = creator_id;
       return output;
     },
     

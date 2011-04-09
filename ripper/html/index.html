@@ -13,59 +13,36 @@
   <script src="js/wizard.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/world.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/info.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/spelldisplay.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
   <link rel="stylesheet" href="css/chaos.css" type="text/css" media="screen">
 </head>
 <body>
   <div id='centered_container'>
     <div id='left_display'>
+      <canvas id='info' width='512' height='768'></canvas>
+    </div>
+    <div id='middle_display'>
       <canvas id='board' width='512' height='384'></canvas>
     </div>
     <div id='right_display'>
-      <canvas id='info' width='512' height='384'></canvas>
+      <canvas id='spells' width='512' height='768'></canvas>
     </div>
   </div>
   <script type="text/javascript">
 function start() {
   Storage.init(2, function (obj) {
-    var king_cobra = Storage.new_object(2, 'andyh'), golden_dragon = Storage.new_object(25, 'andyh');
+    var king_cobra, golden_dragon, blob;
     Board.init($('board'));
-    Info.init($('info'));
     Board.draw_arena();
+    Info.init($('info'));
     Wizard.create('Julian', 0, 0, 15);
-    setTimeout(function () {
-      Wizard.create('Gandalf', 0, 1, 14);
-    }, 1000);
-    setTimeout(function () {
-      Wizard.create('GreatFogey', 0, 2, 13);
-    }, 2000);
-    setTimeout(function () {
-      Wizard.create('Dyerarti', 0, 3, 12);
-    }, 3000);
-    setTimeout(function () {
-      Wizard.create('Gowin', 0, 4, 11);
-    }, 4000);
-    setTimeout(function () {
-      Wizard.create('Merlin', 0, 5, 10);
-    }, 5000);
-    setTimeout(function () {
-      Wizard.create('Ilian Rane', 0, 6, 6);
-    }, 6000);
-    setTimeout(function () {
-      Wizard.create('Asimono Zark', 0, 7, 7);
-    }, 7000);
-    // World.add_object(1, 1, golden_dragon);
-    // setTimeout(function () {
-    //   Board.burn_beam(1, 1, 5, 1, function () {
-    //     Board.dragon_burn_effect(5, 1, function () {
-    //       World.kill_object(5, 1);
-    //     });
-    //   });
-    // }, 2000);
+    Wizard.create('Gandalf', 0, 1, 14);
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');
   });
 }
+
 
 start();
   </script>
