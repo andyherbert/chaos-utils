@@ -217,9 +217,8 @@ class Chaos
   private
   
   def get_spell_index(name)
-    spells_lookup = spells
-    spells_lookup.each_with_index do |spell, index|
-      return index + 1 if spell[:name] == name
+    spells.each_with_index do |spell, index|
+      return index + 1 if spell[:name] =~ /#{name}/i
     end
     return 0
   end

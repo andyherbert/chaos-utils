@@ -16,7 +16,7 @@ World = (function () {
     object.frame_index = 0;
     object.dead = dead;
     layer[y * 15 + x] = object;
-    Board.update_cell(x, y);
+    Board.update_cell(x, y, true);
   }
   
   function remove_object(layer, x, y) {
@@ -40,7 +40,7 @@ World = (function () {
   }
   
   return {
-    'add_corpse': function (x, y, object) {
+    'add_corpse': function (object, x, y) {
       add_object(layer.corpse, x, y, object, true);
     },
     
@@ -48,7 +48,7 @@ World = (function () {
       remove_object(layer.corpse, x, y);
     },
     
-    'add_wizard': function (x, y, object) {
+    'add_wizard': function (object, x, y) {
       add_object(layer.wizard, x, y, object, false);
     },
     
@@ -56,7 +56,7 @@ World = (function () {
       remove_object(layer.wizard, x, y);
     },
     
-    'add_object': function (x, y, object) {
+    'add_object': function (object, x, y) {
       add_object(layer.object, x, y, object, false);
     },
     
@@ -74,7 +74,7 @@ World = (function () {
       remove_object(layer.object, sx, sy);
     },
     
-    'add_blob': function (x, y, object) {
+    'add_blob': function (object, x, y) {
       add_object(layer.blob, x, y, object);
     },
     

@@ -20,26 +20,35 @@
 <body>
   <div id='centered_container'>
     <div id='left_column'>
-      <canvas id='info' width='512' height='768'></canvas>
+      <canvas id='info' width='256' height='384'></canvas>
     </div>
     <div id='middle_column'>
       <canvas id='board' width='512' height='384'></canvas>
     </div>
     <div id='right_column'>
-      <canvas id='spelldisplay' width='512' height='768'></canvas>
+      <canvas id='spelldisplay' width='256' height='384'></canvas>
     </div>
   </div>
   <script type="text/javascript">
 function start() {
-  Storage.init(2, function (obj) {
-    var king_cobra, golden_dragon, blob;
-    Board.init($('board'));
-    Info.init($('info'));
-    SpellDisplay.init($('spelldisplay'));
+  var info_scale = 1, board_scale = 2, spell_display_scale = 1;
+  Storage.init(function (obj) {
+    var king_cobra, blob;
+    Board.init($('board'), board_scale);
+    Info.init($('info'), info_scale);
+    SpellDisplay.init($('spelldisplay'), info_scale);
     Board.draw_arena();
     Wizard.create('Julian', 0, 0, 15);
-    Wizard.create('Gandalf', 0, 1, 14);
+    Wizard.create('Gandalf', 0, 2, 14);
     SpellDisplay.use_wizard(0);
+    king_cobra = Storage.create_object(2, 0, board_scale);
+    setTimeout(function () {
+      Board.spell_beam(1, 4, 2, 5, function () {
+        Board.twirl_effect(2, 5, function () {
+          World.add_object(Storage.create_object(2, 0, board_scale), 2, 5);
+        });
+      });
+    }, 1000);
   }, function (status) {
     alert('Could not obtain resource file: (' + status + ')');
   });
