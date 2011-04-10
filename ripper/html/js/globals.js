@@ -1,5 +1,5 @@
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-var Ajax, Board, Canvas, Info, RGB, SpellDisplay, Storage, Wizard, World, firefox;
+var Ajax, Board, Canvas, ChaosCanvas, Info, RGB, SpellDisplay, Storage, Wizard, World, firefox;
 
 RGB = {
   'black': 0,

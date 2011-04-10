@@ -7,16 +7,15 @@ Wizard = (function () {
     return Math.floor(Math.round(Math.random() * 9) / ((divisor === undefined) ? 1 : divisor));
   }
   
-  function generate_spells(number_of_spells) {
-    var i, spells = [Storage.spell(0)];
-    for (i = 0; i < number_of_spells; i += 1) {
-      spells[spells.length] = Storage.spell(Math.floor(Math.random() * (Storage.number_of_spells() - 4)) + 1);
-    }
-    return spells;
-  }
+  // function generate_spells(number_of_spells) {
+  //   var i, spells = [Storage.spell(0)];
+  //   for (i = 0; i < number_of_spells; i += 1) {
+  //     spells[spells.length] = Math.floor(Math.random() * (Storage.number_of_spells() - 4)) + 1;
+  //   }
+  //   return spells;
+  // }
   
-  function create(name, level, character, ink) {
-    var spellbook = generate_spells(Math.min(20, 11 + dice(2) + level)), sprite = Storage.wizard(character, ink, Board.get_scale());
+  function create(name, level, character, ink, spellbook) {
     return {
       'combat': 1 + dice(2) + Math.floor(level / 2),
       'ranged_combat': 0,
@@ -38,7 +37,7 @@ Wizard = (function () {
       'character': character,
       'level': level,
       'anim_timing': Storage.wizard_timing(),
-      'anim': [sprite, sprite, sprite, sprite],
+      'anim': Storage.wizard(character, ink, Board.get_scale()),
       'flash': Storage.flash_wizard(character, Board.get_scale()),
       'black': Storage.wizard(character, RGB.black, Board.get_scale()),
       'ink': ink,
@@ -73,8 +72,8 @@ Wizard = (function () {
   }
   
   return {
-    'create': function (name, level, character, ink) {
-      wizards[wizards.length] = create(name, level, character, ink);
+    'create': function (name, level, character, ink, spellbook) {
+      wizards[wizards.length] = create(name, level, character, ink, spellbook);
       reposition_wizards();
     },
     

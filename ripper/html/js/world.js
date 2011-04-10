@@ -9,6 +9,11 @@ World = (function () {
     return layer[y * 15 + x];
   }
   
+  function visible(x, y) {
+    var i = y * 15 + x;
+    return (layer.blob[i] || layer.object[i] || layer.wizard[i] || layer.corpse[i]);
+  }
+  
   function add_object(layer, x, y, object, dead) {
     object.x = x;
     object.y = y;
@@ -37,6 +42,31 @@ World = (function () {
         }
       });
     });
+  }
+  
+  function engaged(object_x, object_y) {
+    var x_count, y_count, x, y, slice, object = visible(object_x, object_y);
+    for (y_count = -1; y_count <= 1; y_count += 1) {
+      for (x_count = -1; x_count <= 1; x_count += 1) {
+        x = object.x + x_count;
+        y = object.y + y_count;
+        if ((x >= 0) && (x < 15) && (y >= 0) && (y < 10) && !((y_count === 0) && (x_count === 0))) {
+          slice = World.get_slice(x, y);
+          if (object.wizard) {
+            if (slice.wizard || (slice.object && (slice.object.creator_id !== object.id))) {
+              return true;
+            }
+          } else {
+            if (slice.wizard && (slice.wizard.id !== object.creator_id)) {
+              return true;
+            } else if (slice.object && (slice.object.creator_id !== object.creator_id)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
   
   return {
@@ -87,6 +117,11 @@ World = (function () {
       remove_object(layer.blob, x, y);
     },
     
+    'move_blob': function (sx, sy, dx, dy) {
+      add_object(layer.blob, dx, dy, get(layer.object, sx, sy));
+      remove_object(layer.blob, sx, sy);
+    },
+    
     'get_corpse': function (x, y) {
       return get(layer.corpse, x, y);
     },
@@ -116,9 +151,12 @@ World = (function () {
       return {'corpse': layer.corpse[i], 'wizard': layer.wizard[i], 'object': layer.object[i], 'blob': layer.blob[i]};
     },
     
+    'engaged': function (x, y) {
+      return engaged(x, y);
+    },
+    
     'visible': function (x, y) {
-      var i = y * 15 + x;
-      return (layer.blob[i] || layer.object[i] || layer.wizard[i] || layer.corpse[i]);
+      return visible(x, y);
     },
     
     'cast_chance': function (wizard, spell) {

@@ -15,6 +15,7 @@
   <script src="js/info.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/spelldisplay.js" type="text/javascript" charset="utf-8"></script>
   <script src="js/board.js" type="text/javascript" charset="utf-8"></script>
+  <script src="js/chaoscanvas.js" type="text/javascript" charset="utf-8"></script>
   <link rel="stylesheet" href="css/chaos.css" type="text/css" media="screen">
 </head>
 <body>
@@ -31,37 +32,29 @@
   </div>
   <script type="text/javascript">
 /*jslint white: true, onevar: true, undef: true, newcap: true, nomen: true, regexp: true, plusplus: true, bitwise: true, browser: true, devel: true, maxerr: 50, indent: 2 */
-/*global Ajax: true, Board: true, Canvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
-function start() {
-  var info_scale = 1, board_scale = 2, spell_display_scale = 1;
-  Board.init($('board'), board_scale);
-  Info.init($('info'), info_scale);
-  SpellDisplay.init($('spell_display'), spell_display_scale);
-  Board.draw_arena();
-  Wizard.create('Julian', 0, 0, 15);
-  Wizard.create('Gandalf', 0, 2, 14);
-  // Wizard.shadow_form(0);
-  SpellDisplay.use_wizard(0);
-  setTimeout(function () {
-    Board.wizard_death(1, 4, function () {
-      World.remove_wizard(1, 4);
-    });
-  }, 2000);
-  // setTimeout(function () {
-  //   Board.spell_beam(1, 4, 2, 5, function () {
-  //     Board.twirl_effect(2, 5, function () {
-  //       World.add_object(Storage.create_object(2, 0, Board.get_scale()), 2, 5);
-  //     });
-  //   });
-  // }, 2000);
+/*global Ajax: true, Board: true, Canvas: true, ChaosCanvas: true, Info: true, RGB: true, SpellDisplay: true, Storage: true, Wizard: true, World: true, firefox: true*/
+function do_moves(obj, count, callback, fast) {
+  if (count < obj.length) {
+    ChaosCanvas[obj[count].call](obj[count], function () {
+      setTimeout(function () {
+        do_moves(obj, count + 1, callback, fast);
+      }, fast ? 0 : 1000);
+    }, fast);
+  } else {
+    callback();
+  }
 }
 
-Storage.init(function (obj) {
-  $('board').getContext('2d').drawImage(Storage.loading_screen(2), 0, 0);
-  setTimeout(start, 0);
-}, function (status) {
-  alert('Could not obtain resource file: (' + status + ')');
-});
-  </script>
+function start() {
+  Ajax.get('json/moves.json', function (obj) {
+    do_moves(obj, 0, function () {
+    }, false);
+  }, function (status_code) {
+    alert('Error: ' + status_code);
+  });
+}
+
+ChaosCanvas.init($('board'), 2, $('info'), 1, $('spell_display'), 1, start);
+</script>
 </body>
 </html>

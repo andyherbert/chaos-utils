@@ -41,7 +41,7 @@ Board = (function () {
     World.get_slice(x, y).each_pair(function (layer_name, object) {
       if (object !== undefined) {
         if (object.shadow_form && ((object.frame_index % 2) !== 0)) {
-          draw_image(object.black, object.x, object.y);
+          draw_image(object.black[object.frame_index], object.x, object.y);
         } else if (object.dead) {
           draw_image(object.corpse, object.x, object.y);
         } else {
@@ -179,12 +179,17 @@ Board = (function () {
       }
       setTimeout(function () {
         do_wizard_death(frames, black, x, y, callback, count + 1);
-      }, 10);
+      }, 30);
     } else {
       canvas.restore_buffer();
       set_interactive();
       callback();
     }
+  }
+  
+  function blue_border() {
+    ctx.drawImage(Storage.border(256 * scale, 176 * scale, RGB.blue, RGB.black, scale), 0, 0);
+    draw_text();
   }
   
   return {
@@ -243,26 +248,26 @@ Board = (function () {
       if (slice.wizard) {
         freeze();
         canvas.save_buffer();
-        do_wizard_death(slice.wizard.flash.sub_array(slice.wizard.frame_index), slice.wizard.black, x, y, callback, 0);
+        do_wizard_death(slice.wizard.flash.sub_array(slice.wizard.frame_index), slice.wizard.black[slice.wizard.frame_index], x, y, callback, 0);
       }
     },
     
     'dragon_burn_effect': function (x, y, callback) {
       start_effect(Storage.effect('dragon_burn', RGB.b_yellow, scale), x, y, function () {
         callback();
-      }, 1, 30);
+      }, 1, 100);
     },
     
     'attack_effect': function (x, y, callback) {
       start_effect(Storage.effect('attack', RGB.b_yellow, scale), x, y, function () {
         callback();
-      }, 1, 30);
+      }, 1, 50);
     },
     
     'exploding_circle_effect': function (x, y, callback) {
       start_effect(Storage.effect('exploding_circle', RGB.b_white, scale), x, y, function () {
         callback();
-      }, 1, 30);
+      }, 1, 50);
     },
     
     'twirl_effect': function (x, y, callback) {
@@ -274,7 +279,7 @@ Board = (function () {
     'explosion_effect': function (x, y, callback) {
       start_effect(Storage.effect('explosion', RGB.b_yellow, scale), x, y, function () {
         callback();
-      }, 1, 30);
+      }, 1, 100);
     },
     
     'footer': function (image) {
@@ -289,9 +294,11 @@ Board = (function () {
       draw_text();
     },
     
-    'cast_text': function (wizard_name, spell_name, range, callback) {
+    'cast_text': function (wizard_name, spell_name, range, callback, fast) {
       wizard_name = Storage.text(wizard_name + ' ', RGB.b_yellow, scale);
       spell_name = Storage.text(spell_name + '  ', RGB.b_green, scale);
+      range = Math.floor(range / 2);
+      range = (range > 9) ? 20 : range;
       range = Storage.text(String(range), RGB.b_white, scale);
       freeze();
       draw_text(wizard_name);
@@ -302,15 +309,24 @@ Board = (function () {
           setTimeout(function () {
             set_interactive();
             callback();
-          }, 300);
-        }, 300);
-      }, 300);
+          }, fast ? 0 : 500);
+        }, fast ? 0 : 500);
+      }, fast ? 0 : 500);
     },
     
     'draw_arena': function () {
       erase();
-      ctx.drawImage(Storage.border(256 * scale, 176 * scale, RGB.blue, RGB.black, scale), 0, 0);
+      blue_border();
       set_interactive();
+    },
+    
+    'blue_border': function () {
+      blue_border();
+    },
+    
+    'ranged_attack': function (range) {
+      ctx.drawImage(Storage.border(256 * scale, 176 * scale, RGB.b_purple, RGB.black, scale), 0, 0);
+      Board.draw_text(Canvas.tile_horizontal([Storage.text(Storage.in_game_message(59), RGB.b_green, Board.get_scale()), Storage.text(String(range), RGB.b_yellow, Board.get_scale())]));
     },
     
     'update_cell': function (x, y, info_update) {

@@ -30,7 +30,7 @@ Info = (function () {
     if (object.flying) {
       attributes[attributes.length] = Storage.in_game_message(66);
     }
-    if (object.shadow) {
+    if (object.shadow_form) {
       attributes[attributes.length] = Storage.in_game_message(67);
     }
     if (object.undead) {

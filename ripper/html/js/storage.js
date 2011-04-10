@@ -214,7 +214,7 @@ Storage = (function () {
       });
     },
     
-    'create_object': function (object_id, creator_id, scale) {
+    'create_object': function (object_id, illusion, creator_id, scale) {
       var output = json.objects[object_id].clone();
       if (objects[scale] === undefined) {
         objects[scale] = [];
@@ -228,6 +228,7 @@ Storage = (function () {
       }
       output.anim = objects[scale][object_id].anim;
       output.corpse = objects[scale][object_id].corpse;
+      output.illusion = illusion;
       if (creator_id !== undefined) {
         output.creator_id = creator_id;
       }
@@ -289,7 +290,8 @@ Storage = (function () {
     },
     
     'wizard': function (wizard_index, ink, scale) {
-      return fetch_wizard(wizard_index, ink, scale);
+      var sprite = fetch_wizard(wizard_index, ink, scale);
+      return [sprite, sprite, sprite, sprite];
     },
     
     'wizard_timing': function () {
