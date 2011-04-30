@@ -3,8 +3,8 @@ make_json
 ripper/html/deploy_website
 gooey-blob-group/gooeyblob.html
 gooey-blob-group/gooeyblob.json
-ripper/chaos.sna
-ripper/chaos.scr
+chaos2json/chaos.sna
+chaos2json/chaos.scr
 ripper/html/json/chaos.json
 spell-poker/chaos.sna
 spell-poker/chaos_poked.sna
