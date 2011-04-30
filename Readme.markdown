@@ -29,9 +29,13 @@ json.
 If `chaos.scr` containing the loading screen is also located in the working
 directory, then it will be appended to the json object.
 
-## spell poker/poke_spells.rb
+## spell-poker/poke_spells.rb
 
 Pokes spells into a chaos snapshot (see source for examples).
+
+## chaos-font/chaos.otf
+
+An open-type outline font based on the bitmap font used in the game.
 
 # Contact
 
